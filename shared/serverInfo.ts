@@ -64,7 +64,6 @@ export class ServerInfo extends Component {
         ServerInfo.instance = this;
     }
 
-
     static override datagramDefinition(): void {
         super.datagramDefinition();
         this.datagram = this.datagram.cloneAppend<SerialisedServerInfo>({

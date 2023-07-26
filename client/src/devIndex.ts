@@ -10,6 +10,9 @@ document.body.innerHTML = html;
 import { app } from "./index";
 import { DevAttach } from "./devDebugAttach";
 
+let factories: Array<string> = [];
+
+
 DevAttach.container = app.stage;
 DevAttach.init();
 DevAttach.toggle("drawDebug", (set?: boolean) => {
@@ -18,6 +21,40 @@ DevAttach.toggle("drawDebug", (set?: boolean) => {
 });
 
 const baseDebugUrl = "http://" + window.location.hostname + ":3001/dev";
+
+const spawnUi = document.getElementsByClassName("dev-spawn")[0];
+let selectedFactory: string | undefined = undefined;
+
+fetch(baseDebugUrl + "/factories").then(async (r) => {
+    factories = JSON.parse(await r.text());
+    const buttons: Array<HTMLInputElement> = [];
+    for (const factory of factories) {
+        const factoryButton = document.createElement("input");
+        factoryButton.type = "button";
+        factoryButton.value = factory;
+        factoryButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectedFactory = factory;
+            for (const butt of buttons) {
+                butt.classList.remove("on");
+            }
+            factoryButton.classList.add("on");
+
+        })
+        spawnUi.appendChild(factoryButton);
+        buttons.push(factoryButton);
+    }
+});
+
+document.addEventListener("click",(e)=>{
+    if(selectedFactory && showSpawnVisible){
+        e.stopPropagation();
+        const worldCoords = DevAttach.windowToWorld(e);
+        fetch(baseDebugUrl + "/spawn/" + selectedFactory + `/${worldCoords.x}/${worldCoords.y}`);    
+    }
+
+});
+
 DevAttach.button("saveState", () => {
     fetch(baseDebugUrl + "/save");
 });
@@ -39,16 +76,49 @@ DevAttach.button("timeStep", () => {
 });
 
 
-DevAttach.toggle("objectInfo", (set?: boolean) => {
-    if (set != undefined) DevAttach.debugInfo = set;
-    if (DevAttach.debugInfo) {
+const setComponents = DevAttach.toggle("objectInfo", (set?: boolean) => {
+    if (set != undefined) DevAttach.showComponents = set;
+    if (DevAttach.showComponents) {
         document.getElementsByClassName("dev-information")[0].classList.remove("hidden");
+        setObjects(false);
+        setFactories(false);
     } else {
         document.getElementsByClassName("dev-information")[0].classList.add("hidden");
     }
 
-    return DevAttach.debugInfo;
+    return DevAttach.showComponents;
 });
+
+const setObjects = DevAttach.toggle("objectList", (set?: boolean) => {
+    if (set != undefined) DevAttach.showObjects = set;
+    if (DevAttach.showObjects) {
+        document.getElementsByClassName("dev-objects")[0].classList.remove("hidden");
+        setComponents(false);
+        setFactories(false);
+    } else {
+        document.getElementsByClassName("dev-objects")[0].classList.add("hidden");
+    }
+
+    return DevAttach.showObjects;
+});
+
+
+let showSpawnVisible = false;
+const setFactories = DevAttach.toggle("objectSpawn", (set?: boolean) => {
+    if (set != undefined) showSpawnVisible = set;
+    if (showSpawnVisible) {
+        document.getElementsByClassName("dev-spawn")[0].classList.remove("hidden");
+        setComponents(false);
+        setObjects(false);
+
+    } else {
+        document.getElementsByClassName("dev-spawn")[0].classList.add("hidden");
+    }
+
+    return showSpawnVisible;
+});
+
+
 
 BaseObject.attach = (baseobject: BaseObject) => {
     DevAttach.attachTo(baseobject);
