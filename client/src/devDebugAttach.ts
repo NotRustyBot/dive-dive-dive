@@ -26,7 +26,8 @@ export class DevAttach {
     drawable?: Drawable;
 
     static drawDebug = true;
-    static debugInfo = false;
+    static showComponents = false;
+    static showObjects = false;
 
     static button(id: string, action: (button: HTMLInputElement) => void) {
         const btn = document.getElementById(id) as HTMLInputElement;
@@ -38,21 +39,26 @@ export class DevAttach {
 
     static toggle(id: string, proxy: (set?: boolean) => boolean) {
         const btn = document.getElementById(id) as HTMLInputElement;
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
 
-            const currentState = proxy();
-            if (currentState) {
-                proxy(false);
-                btn.classList.remove("on");
-                btn.classList.add("off");
+        const action = (setTo: boolean) => {
 
-            } else {
+            if (setTo) {
                 proxy(true);
                 btn.classList.add("on");
                 btn.classList.remove("off");
+            } else {
+                proxy(false);
+                btn.classList.remove("on");
+                btn.classList.add("off");
             }
+        }
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const currentState = proxy();
+            action(!currentState);
         })
+
+        return action;
     }
 
     static playPauseButton: HTMLInputElement;
@@ -75,9 +81,16 @@ export class DevAttach {
         DevAttach.container.addChild(this.graphics);
     }
 
+    htmlCont: HTMLDivElement;
+    updateHtml: () => void;
     static attachTo(baseobject: BaseObject) {
         const newAttached = new DevAttach(baseobject);
         DevAttach.attached.add(newAttached);
+        const { container, update } = createClickableObjectInfo(newAttached.parent, () => {
+            this.select(newAttached);
+        });
+        newAttached.htmlCont = container;
+        newAttached.updateHtml = update;
         return newAttached;
     }
 
@@ -87,7 +100,7 @@ export class DevAttach {
         if (!this.drawable) this.drawable = this.parent.getComponentByType(Drawable);
         if (!this.drawable) this.drawable = this.parent.getComponentByType(PhysicsDrawable);
         this.graphics.clear();
-
+        this.updateHtml();
         let alpha = 0.5;
         if (this.selected) {
             alpha = 1;
@@ -135,9 +148,11 @@ export class DevAttach {
 
     static selected?: DevAttach;
     static select(attached?: DevAttach) {
+        if (this.selected) this.selected.removeInfo();
         if (this.selected) this.selected.selected = false;
         if (attached) attached.selected = true;
         this.selected = attached;
+        if (attached) attached.createInfo();
     }
 
     selected = false;
@@ -154,9 +169,7 @@ export class DevAttach {
                 maxDist = dist
             }
         }
-        if (this.selected) this.selected.removeInfo();
         this.select(nearest);
-        if (nearest) nearest.createInfo();
     }
 
     removeInfo() {
@@ -188,7 +201,7 @@ export class DevAttach {
 
         const place = document.getElementsByClassName("dev-information")[0]!;
 
-        const container = createObjectInfo(id, "object");
+        const { container } = createObjectInfo(id, "object");
 
         this.infoContainer = container;
         place.appendChild(container);
@@ -208,6 +221,38 @@ export class DevAttach {
 }
 
 
+function createClickableObjectInfo(object: BaseObject, select: () => void) {
+
+    const { container, identity } = createObjectInfo("", "");
+    container.addEventListener("click", (e) => {
+        e.stopPropagation();
+        select();
+    })
+
+    const place = document.getElementsByClassName("dev-objects")[0]!;
+    place.appendChild(container);
+    const update = () => {
+        const netId = object.getId(ObjectScope.network);
+        const id = (object.getId(ObjectScope.game) ?? "n/a") + (netId != undefined ? "(" + netId + ")" : "");
+        identity.innerText = id;
+        const sync = object.getComponentByType(Sync);
+        if (sync) {
+            if (Sync.localAuthority.has(sync)) {
+                identity.classList.add("on");
+                identity.classList.remove("off");
+            } else {
+                identity.classList.remove("off");
+                identity.classList.add("off");
+            }
+        }else{
+            identity.classList.remove("on");
+            identity.classList.remove("off");
+        }
+    }
+    return { container, update }
+}
+
+
 function createObjectInfo(id: string, headText: string) {
     const container = document.createElement("div");
     container.classList.add("dev-object-info");
@@ -218,11 +263,11 @@ function createObjectInfo(id: string, headText: string) {
     head.innerText = headText;
     container.appendChild(identity);
     container.appendChild(head);
-    return container
+    return { container, head, identity }
 }
 
 
-function createComponentInfo(id: string, headText: string, fields?: Serialisable, change?: (text: string) => void) {
+function createComponentInfo(id: string, headText: string, fields?: Serialisable, change?: (text: string, ) => void) {
     const container = document.createElement("div");
     container.classList.add("dev-object-info");
     container.classList.add("closed");
