@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "noImplicitOverride": true,
+
       "baseUrl": "./",
       "outDir": "./dist",
       "module": "CommonJS",

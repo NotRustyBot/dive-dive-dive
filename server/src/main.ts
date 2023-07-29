@@ -6,31 +6,49 @@ import { headerId } from "@shared/netManager";
 import { Vector } from "@shared/types";
 import { startDevServer } from "./devserver";
 import { serverMode } from "@shared/serverInfo";
+import { messageType } from "@shared/messages";
+import { Detector } from "./server/detector";
+import { Detectable } from "./server/detectable";
+import { RangeDetector } from "./server/rangeDetector";
+import { RangeDetectable } from "./server/rangeDetectable";
+import { Client } from "./client";
 
 
 startDevServer();
 
 NetManager.initDatagrams();
-NetManager.identity = "server";
-const connector = new Connector();
+NetManager.identity = 0;
+export const connector = new Connector();
 connector.start();
 console.log("ready");
 const game = ObjectScope.game;
-const terrainLayer = new Layer();
 
-export let serverInfo: ServerInfo;
+export enum physicsLayerEnum {
+    collision,
+    detectable
+}
+
+export const physicsLayers: Record<physicsLayerEnum, Layer> = {
+    [physicsLayerEnum.collision]: new Layer(),
+    [physicsLayerEnum.detectable]: new Layer(),
+}
+
+let serverInfo: ServerInfo;
+let serverInfoSync: Sync;
 function createInfoObject() {
     const serverInfoObject = ObjectScope.network.createObject();
     serverInfo = serverInfoObject.addComponent(ServerInfo);
-    const sync = serverInfoObject.addComponent(Sync);
-    sync.authorize([serverInfo], NetManager.identity);
-    sync.init();
+    serverInfoSync = serverInfoObject.addComponent(Sync);
+    serverInfoSync.authorize([serverInfo], NetManager.identity);
+    serverInfoSync.init();
     serverInfo.init();
 }
 
 createInfoObject();
 
-export function createSubmarine(authority: string) {
+
+const clientSubs = new Map<number, SubmarineBehaviour>();
+export function createSubmarine(client: Client) {
     const sub = game.createObject();
     const net = sub.addComponent(Sync);
     const hitbox = sub.addComponent(DynamicHitbox);
@@ -39,29 +57,35 @@ export function createSubmarine(authority: string) {
     const drawable = sub.addComponent(PhysicsDrawable);
     const submarine = sub.addComponent(SubmarineBehaviour);
     const transform = sub.addComponent(Transform);
+    const detector = sub.addComponent(RangeDetector);
+    const detectable = sub.addComponent(RangeDetectable);
     control.submarine = submarine;
     submarine.physics = physics;
+    submarine.owner = client.id;
     drawable.physics = physics;
     submarine.hitbox = hitbox;
     hitbox.sides = new Vector(250, 100);
     drawable.url = "/assets/brandy.png";
     hitbox.layerId = 0;
-    net.authorize([submarine, transform]);
-    net.authorize([control], authority);
+    net.authorize([submarine, transform, drawable, physics]);
+    net.authorize([control], client.id);
+    detector.subscribe(client);
     physics.init();
     hitbox.init();
     control.init();
     drawable.init();
     net.init();
     submarine.init();
-
+    detector.init();
+    detectable.init();
     ObjectScope.network.scopeObject(sub);
+    clientSubs.set(client.id, submarine);
 
     return sub;
 }
 
 const tps = 20;
-const sendView = new AutoView(new ArrayBuffer(1000));
+const sendView = new AutoView(new ArrayBuffer(10000));
 setInterval(() => {
     if (serverInfo.mode == serverMode.update || (serverInfo.mode == serverMode.pause && serverInfo.tick == 1)) {
         const dt = 1 / tps;
@@ -72,24 +96,51 @@ setInterval(() => {
         game.fire("post-collision", dt * 60);
 
     }
+    
+    Detector.processAll();
+    sendView.index = 0;
 
+    sendView.writeUint16(headerId.objects);
+    const sbindex = sendView.index;
+    sendView.writeUint16(0);
+
+    if(serverInfoSync.writeAuthorityBits(sendView)){
+        sendView.setUint16(sbindex,1);
+    }
+
+
+    const bindex = sendView.index;
 
     for (const [_, client] of connector.clients) {
-        sendView.index = 0;
-        if(serverInfo.tick != 0) Message.tick(sendView);
-        sendView.writeUint16(headerId.objects);
-        sendView.writeUint16(Sync.localAuthority.size);
-        //#perf
-        for (const sync of Sync.localAuthority) {
-            if (sync.cache.has(client.id)) {
-                sync.writeAuthorityBits(sendView, client.id);
-            } else {
-                sync.writeAllBits(sendView);
-            }
-        }
+        sendView.index = bindex;
+        if (serverInfo.tick != 0) Message.write(sendView, { typeId: messageType.tick });
+
+        client.writeMessages(sendView);
+        client.writeObjects(sendView);
         client.send(sendView);
     }
 
-    if(serverInfo.tick == 1) serverInfo.tick = 0;
+    if (serverInfo.tick == 1) serverInfo.tick = 0;
 
 }, 1000 / tps);
+
+export function clearAll(){
+    for (const [sw, client] of connector.clients) {
+        client.untrackAll();
+    }
+
+    Sync.localAuthority.clear();
+
+    for (const [id, bo] of ObjectScope.network.baseObjects) {
+        bo.remove();
+    }
+
+    for(const [id, layer] of Layer.list){
+        for (const [aid, area] of layer.areas) {
+            area.members.clear();
+        }
+        layer.areas.clear();
+    }
+
+    ObjectScope.network.clear();
+}

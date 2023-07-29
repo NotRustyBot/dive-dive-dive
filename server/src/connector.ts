@@ -1,16 +1,17 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/netManager"
 import { AutoView } from "@shared/datagram";
-import { Message, Sync } from "./registry";
+import { Message, ServerInfo, Sync } from "./registry";
 import { Client } from "./client";
 import { createSubmarine } from "./main";
+import { Detector } from "./server/detector";
 
 
 export class Connector {
     clients = new Map<WebSocket, Client>();
     websocket: WebSocketServer;
     motd: string = "motd";
-    knownClients: Record<string, string> = {};
+    knownClients = new Map<number, string>();
     constructor() {
         this.websocket = new WebSocketServer({ port: 1500 });
     }
@@ -37,45 +38,45 @@ export class Connector {
                         case headerId.handshake:
                             const out = NetManager.connectRequest.deserealise<HandshakeRequest>(autoview);
                             let response = "";
-                            if (out.clientId == "") {
-                                out.clientId = NetManager.makeId();
+                            if (out.clientId == 0) {
+                                out.clientId = this.knownClients.size + 1;
                                 response = "nice to meet you";
-                            } else if (this.knownClients[out.clientId]) {
-                                if (this.knownClients[out.clientId] != out.secret) {
+                            } else if (this.knownClients.get(out.clientId)) {
+                                if (this.knownClients.get(out.clientId) != out.secret) {
                                     response = "i don't think that's you";
-                                    out.clientId = NetManager.makeId();
+                                    out.clientId = this.knownClients.size + 1;
                                 } else {
                                     response = "welcome back"
                                 }
                             } else {
-                                out.clientId = NetManager.makeId();
+                                out.clientId = this.knownClients.size + 1;
                                 response = "i don't know you";
                             }
-                            if (response != "welcome back") {
-                                createSubmarine(out.clientId);
-                            }
 
-
-                            this.knownClients[out.clientId] = out.secret;
+                            this.knownClients.set(out.clientId, out.secret);
 
                             const temp = new AutoView(new ArrayBuffer(1000));
                             const client = new Client(clientSocket, out.clientId, out.secret);
+                            if (response != "welcome back") {
+                                createSubmarine(client);
+                            }else{
+                                Detector.subscribeClient(client);
+                            }
                             temp.writeUint16(headerId.handshake);
                             NetManager.connectReply.serialise<HandshakeReply>(temp, { clientId: out.clientId, motd: this.motd, response });
-                            client.send(temp);
                             this.clients.set(clientSocket, client);
                             console.log(response, out.clientId);
                             clientSocket.addListener("close", () => {
                                 client.socketClosed();
                                 this.clients.delete(clientSocket);
                             });
-                            temp.index = 0;
+
                             temp.writeUint16(headerId.objects);
-                            temp.writeUint16(Sync.localAuthority.size);
-                            for (const sync of Sync.localAuthority) {
-                                sync.writeAllBits(temp)
-                            }
+                            temp.writeUint16(1);
+                            ServerInfo.get().parent.getComponentByType(Sync).writeAllBits(temp);
+
                             client.send(temp);
+
                             break;
                         case headerId.objects:
                             const count = autoview.readUint16()
@@ -84,7 +85,7 @@ export class Connector {
                             }
                             break;
                         case headerId.message:
-                            const msg = Message.readMessage(autoview);
+                            const msg = Message.read(autoview);
                             break;
                     }
                 }

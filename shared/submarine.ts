@@ -1,6 +1,6 @@
 import { Vector, Vectorlike } from "./types";
 import { gravity } from "./constants";
-import { Component, Serialisable, SerialisedComponent } from "./component";
+import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
 import { SubStats } from "./stats";
 import { BaseObject } from "./baseObject";
 import { Physics } from "./physics";
@@ -15,12 +15,13 @@ export type SerialisedSubmarineBehaviour = {
     ballastWater: number;
     leakWater: number;
     leaking: number;
+    owner: number;
     control: Vectorlike;
 }
 
 export type SerialisedSubmarineBehaviourComponent = SerialisedSubmarineBehaviour & SerialisedComponent;
 
-export class SubmarineBehaviour extends Component {
+export class SubmarineBehaviour extends NetComponent {
     control = new Vector();
     physics!: Physics;
     hitbox!: Hitbox;
@@ -30,6 +31,7 @@ export class SubmarineBehaviour extends Component {
     ballastWater = 0;
     leakWater = 0;
     leaking = 0;
+    owner = 0;
 
     public get ballastFill(): number {
         return this.ballastWater / this.stats.ballastVolume;
@@ -47,7 +49,8 @@ export class SubmarineBehaviour extends Component {
             hitbox: datatype.uint8,
             leakWater: datatype.float32,
             physics: datatype.uint8,
-            leaking: datatype.float32
+            leaking: datatype.float32,
+            owner: datatype.uint32,
         });
     }
 
@@ -134,6 +137,7 @@ export class SubmarineBehaviour extends Component {
         this.ballastWater = data.ballastWater;
         this.leakWater = data.leakWater;
         this.leaking = data.leaking;
+        this.owner = data.owner;
         this.physics = this.parent.getComponent(data.physics);
         this.hitbox = this.parent.getComponent(data.hitbox);
         this.control = Vector.fromLike(data.control);
@@ -146,6 +150,7 @@ export class SubmarineBehaviour extends Component {
         data.ballastWater = this.ballastWater;
         data.leakWater = this.leakWater;
         data.leaking = this.leaking;
+        data.owner = this.owner;
         data.control = this.control.toLike();
         return data;
     }

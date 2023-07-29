@@ -3,10 +3,13 @@ import fs from 'fs';
 import cors from 'cors';
 import { Drawable, Hitbox, ObjectScope, Sync, Transform } from './registry';
 import fileUpload from 'express-fileupload';
-import { serverInfo } from './main';
-import { serverMode } from '@shared/serverInfo';
+import { clearAll, connector } from './main';
+import { ServerInfo, serverMode } from '@shared/serverInfo';
 import { BaseObject } from '@shared/baseObject';
 import { Vector, Vectorlike } from '@shared/types';
+import { Detectable } from './server/detectable';
+import { RangeDetectable } from './server/rangeDetectable';
+import { Detector } from './server/detector';
 
 export function startDevServer() {
     const assetsPath = "../client/static/assets/";
@@ -39,15 +42,17 @@ export function startDevServer() {
     });
 
     app.get('/dev/load', function (req, res) {
-        const data = JSON.parse(fs.readFileSync("persistent.json", "utf-8"));
-        Sync.localAuthority.clear();
-        ObjectScope.network.clear();
+        const data = JSON.parse(fs.readFileSync("persistent.json", "utf8"));
+        clearAll();
         ObjectScope.network = ObjectScope.fromSerialisable(data);
+        for (const [ws, client] of connector.clients) {
+            Detector.subscribeClient(client);
+        }
         res.send("OK");
     });
 
     app.get('/dev/tick', function (req, res) {
-        serverInfo.tick = 1;
+        ServerInfo.get().tick = 1;
         res.send("OK");
     });
 
@@ -62,12 +67,12 @@ export function startDevServer() {
     });
 
     app.get('/dev/pause', function (req, res) {
-        serverInfo.mode = serverMode.pause;
+        ServerInfo.get().mode = serverMode.pause;
         res.send("OK");
     });
 
     app.get('/dev/play', function (req, res) {
-        serverInfo.mode = serverMode.update;
+        ServerInfo.get().mode = serverMode.update;
         res.send("OK");
     });
 
@@ -86,11 +91,12 @@ export function registerFactory(name: string, factory: factory) {
 }
 
 registerFactory("terrain", (v) => {
-    const terrain = ObjectScope.network.createObject();
+    const terrain = ObjectScope.game.createObject();
     const transform = terrain.addComponent(Transform);
     const drawable = terrain.addComponent(Drawable);
     const hitbox = terrain.addComponent(Hitbox);
     const sync = terrain.addComponent(Sync);
+    const detectable = terrain.addComponent(RangeDetectable);
     hitbox.sides = new Vector(220, 220);
     drawable.url = "/assets/terrain.png";
     hitbox.layerId = 0;
@@ -99,5 +105,23 @@ registerFactory("terrain", (v) => {
     drawable.init();
     hitbox.init();
     sync.init();
+    detectable.init();
+    ObjectScope.network.scopeObject(terrain);
     return terrain;
+});
+
+registerFactory("image", (v) => {
+    const image = ObjectScope.game.createObject();
+    const transform = image.addComponent(Transform);
+    const drawable = image.addComponent(Drawable);
+    const sync = image.addComponent(Sync);
+    const detectable = image.addComponent(RangeDetectable);
+    drawable.url = "/assets/red.png";
+    transform.position.set(v.x, v.y);
+    sync.authorize([transform, drawable]);
+    drawable.init();
+    sync.init();
+    detectable.init();
+    ObjectScope.network.scopeObject(image);
+    return image;
 });

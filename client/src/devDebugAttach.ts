@@ -17,6 +17,7 @@ export class DevAttach {
 
     static container: Container;
     static attached = new Set<DevAttach>();
+    static lookup = new Map<BaseObject, DevAttach>();
     //not actually a parent
     parent: BaseObject;
 
@@ -86,12 +87,24 @@ export class DevAttach {
     static attachTo(baseobject: BaseObject) {
         const newAttached = new DevAttach(baseobject);
         DevAttach.attached.add(newAttached);
+        DevAttach.lookup.set(baseobject, newAttached);
         const { container, update } = createClickableObjectInfo(newAttached.parent, () => {
-            this.select(newAttached);
+            DevAttach.select(newAttached);
         });
         newAttached.htmlCont = container;
         newAttached.updateHtml = update;
         return newAttached;
+    }
+
+    static detachFrom(baseobject: BaseObject) {
+        console.log("detaching");
+
+        const toDetach = DevAttach.lookup.get(baseobject);
+        DevAttach.lookup.delete(baseobject);
+        DevAttach.attached.delete(toDetach);
+        ObjectScope.game.unsubscribe("draw", toDetach);
+        toDetach.graphics.destroy();
+        if (DevAttach.selected == toDetach) DevAttach.select(undefined)
     }
 
     ["draw"](dt: number) {
@@ -107,9 +120,17 @@ export class DevAttach {
             this.refreshInfo();
         }
         if (!DevAttach.drawDebug) return;
+
         if (this.hitbox) {
             this.graphics.lineStyle(1, "#00ffaa", alpha);
             this.graphics.drawRect(this.hitbox.x1, this.hitbox.y1, ...this.hitbox.sides.xy());
+
+
+            this.graphics.lineStyle(2, "#ffaaaa", alpha);
+
+            for (const area of this.hitbox.inAreas) {
+                this.graphics.drawRect(area.gridPosition.x * this.hitbox.layer.size, area.gridPosition.y * this.hitbox.layer.size, this.hitbox.layer.size, this.hitbox.layer.size);
+            }
         }
 
         if (this.drawable) {
@@ -244,7 +265,7 @@ function createClickableObjectInfo(object: BaseObject, select: () => void) {
                 identity.classList.remove("off");
                 identity.classList.add("off");
             }
-        }else{
+        } else {
             identity.classList.remove("on");
             identity.classList.remove("off");
         }
@@ -267,7 +288,7 @@ function createObjectInfo(id: string, headText: string) {
 }
 
 
-function createComponentInfo(id: string, headText: string, fields?: Serialisable, change?: (text: string, ) => void) {
+function createComponentInfo(id: string, headText: string, fields?: Serialisable, change?: (text: string,) => void) {
     const container = document.createElement("div");
     container.classList.add("dev-object-info");
     container.classList.add("closed");

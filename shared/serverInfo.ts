@@ -1,5 +1,5 @@
 import { BaseObject } from "./baseObject";
-import { SerialisedComponent, Component } from "./component";
+import { SerialisedComponent, NetComponent } from "./netComponent";
 import { datatype } from "./datagram";
 
 export type SerialisedServerInfo = {
@@ -14,7 +14,7 @@ export enum serverMode {
     pause = 1
 }
 
-export class ServerInfo extends Component {
+export class ServerInfo extends NetComponent {
 
     private _playerCount = 0;
 

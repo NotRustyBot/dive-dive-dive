@@ -1,6 +1,6 @@
 import { datatype } from "../datagram";
 import { BaseObject } from "../baseObject";
-import { Component, Serialisable, SerialisedComponent, compDatatype } from "../component";
+import { NetComponent, Serialisable, SerialisedComponent, commonDatatype } from "../netComponent";
 import { Physics } from "../physics";
 
 
@@ -11,13 +11,13 @@ export type SerialisedPhysicsDrawable = {
 
 export type SerialisedPhysicsDrawableComponent = SerialisedPhysicsDrawable & SerialisedComponent;
 
-export class PhysicsDrawable extends Component {
+export class PhysicsDrawable extends NetComponent {
     physics!: Physics;
     url!: string;
 
     static override datagramDefinition(): void {
         this.datagram = super.datagram.cloneAppend<SerialisedPhysicsDrawable>({
-            physics: compDatatype.compId,
+            physics: commonDatatype.compId,
             url: datatype.string
         });
         this.cacheSize = 2 * 64;

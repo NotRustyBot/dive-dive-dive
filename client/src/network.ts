@@ -3,6 +3,7 @@ import { AutoView } from "@shared/datagram";
 import { Sync } from "@shared/sync";
 import { Message, messageType, netMessage } from "@shared/messages";
 import { ServerInfo } from "@shared/serverInfo";
+import { ObjectScope } from "@shared/objectScope";
 
 
 export class Network {
@@ -14,7 +15,7 @@ export class Network {
     static secret = "";
     static tempAuthority: Array<Sync> = [];
     static start() {
-        NetManager.identity = localStorage.getItem("sun_identity") ?? "";
+        NetManager.identity = parseInt(localStorage.getItem("sun_identity") ?? "0");
         this.secret = localStorage.getItem("sun_secret") ?? NetManager.makeId(32);
         localStorage.setItem("sun_secret", this.secret);
         this.websocket = new WebSocket(`${this.server}:${this.port}`);
@@ -42,7 +43,7 @@ export class Network {
                     console.log(result.response);
                     console.log(result.motd);
                     NetManager.identity = result.clientId;
-                    localStorage.setItem("sun_identity", NetManager.identity);
+                    localStorage.setItem("sun_identity", NetManager.identity.toString());
                     break;
                 case headerId.objects:
                     const count = view.readUint16();
@@ -51,7 +52,7 @@ export class Network {
                     }
                     break;
                 case headerId.message:
-                    const msg = Message.readMessage(view);
+                    const msg = Message.read(view);
                     Network.handleMessage(msg);
                     break;
             }
@@ -63,26 +64,39 @@ export class Network {
             case messageType.tick:
                 ServerInfo.get().tick = 1;
                 break;
+            case messageType.untrackObject:
+
+                const toUntrack = ObjectScope.network.getObject(msg.objectId);
+                toUntrack.remove();
+                break;
         }
     }
 
     static send() {
         if (this.websocket.readyState != this.websocket.OPEN) return
+        console.log(this.autoview.buffer.slice(0, this.autoview.index));
+
         this.websocket.send(this.autoview.buffer.slice(0, this.autoview.index));
         this.autoview.index = 0;
     }
 
     static sendObjects() {
         Network.autoview.writeUint16(headerId.objects);
-        Network.autoview.writeUint16(Sync.localAuthority.size + Network.tempAuthority.length);
+        const bindex = Network.autoview.index;
+        Network.autoview.writeUint16(0);
 
         for (const nc of Network.tempAuthority) {
             nc.writeAllBits(Network.autoview);
         }
-        for (const nc of Sync.localAuthority) {
-            nc.writeAuthorityBits(Network.autoview, "server");
-        }
 
+        let actualSize = 0;
+        for (const nc of Sync.localAuthority) {
+            if (nc.writeAuthorityBits(Network.autoview, 0)) {
+                actualSize++;
+            }
+        }
+        
+        Network.autoview.setUint16(bindex, Network.tempAuthority.length + actualSize);
         Network.tempAuthority = [];
 
         this.send()

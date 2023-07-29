@@ -1,6 +1,6 @@
 import { ObjectScope } from "./objectScope";
 import { BaseObject } from "./baseObject";
-import { Component, SerialisedComponent } from "./component";
+import { NetComponent, SerialisedComponent } from "./netComponent";
 import { Matrix2x2, Vector, Vectorlike } from "./types";
 import { GJK, support } from "./physics/gjk";
 import { Physics } from "./physics";
@@ -13,7 +13,7 @@ export type SerialisedHitBox = {
 
 export type SerialisedHitBoxComponent = SerialisedHitBox & SerialisedComponent
 
-export class Collider extends Component {
+export class Collider extends NetComponent {
     polygon!: Vector[];
     rotated!: Vector[];
     physics?: Physics;

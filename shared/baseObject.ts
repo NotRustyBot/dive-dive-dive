@@ -1,8 +1,9 @@
 import { AutoView, Datagram, datatype } from "./datagram";
-import { Component, Serialisable, SerialisedComponent } from "./component";
+import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
 import { ObjectScope } from "./objectScope";
 import { Vector } from "./types";
 import { Transform } from "./transform";
+import { Component } from "./component";
 
 export type SerialisedBaseObject = {
     id: number,
@@ -16,6 +17,7 @@ export type SerialisedBaseObjectHeader = {
 }
 
 export class BaseObject {
+
     static objectDatagram = new Datagram().append<SerialisedBaseObjectHeader>({
         componentIndex: datatype.uint8,
         id: datatype.uint16,
@@ -26,9 +28,11 @@ export class BaseObject {
     }
 
     static attach = (baseobject: BaseObject) => { }
+    static detach = (baseobject: BaseObject) => { }
 
-    private scopes: Record<number, number> = {};
+    private scopes = new Map<number, number>();
     components = new Map<number, Component>();
+    netComponents = new Map<number, NetComponent>();
     componentIndex = 0;
     transform!: Transform;
 
@@ -40,22 +44,29 @@ export class BaseObject {
         return this.transform.rotation
     }
 
-
     public set rotation(v: number) {
         this.transform.rotation = v;
     }
 
-
     cacheScope(scope: ObjectScope, id: number) {
-        this.scopes[scope.id] = id;
+        this.scopes.set(scope.id, id);
     }
 
     getId(scope: ObjectScope) {
-        return this.scopes[scope.id];
+        return this.scopes.get(scope.id);
     }
 
     uncacheScope(scope: ObjectScope) {
-        delete this.scopes[scope.id];
+        this.scopes.delete(scope.id);
+    }
+
+    linkNetComponent(netComponent: NetComponent) {
+        this.netComponents.set(netComponent.id, netComponent);
+    }
+
+    unlinkNetComponent(netComponent: NetComponent) {
+        this.netComponents.delete(netComponent.id);
+
     }
 
     addComponent<T extends Component>(type: { new(parent: BaseObject, index: number): T }) {
@@ -104,6 +115,14 @@ export class BaseObject {
             component.onRemove();
         }
         this.components.clear();
+    }
+
+    remove() {
+        this.clearComponents();
+        for (const [scopeId, id] of this.scopes) {
+            ObjectScope.get(scopeId).unscopeObject(this);
+        }
+        BaseObject.detach(this);
     }
 
     writeHeaderBits(view: AutoView, scope: ObjectScope) {

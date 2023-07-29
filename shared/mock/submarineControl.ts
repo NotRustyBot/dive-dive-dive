@@ -1,5 +1,5 @@
 import { BaseObject } from "../baseObject";
-import { Component, SerialisedComponent, compDatatype } from "../component";
+import { NetComponent, SerialisedComponent, commonDatatype } from "../netComponent";
 import { datatype } from "../datagram";
 import { ObjectScope } from "../objectScope";
 import { SubmarineBehaviour } from "../submarine";
@@ -12,7 +12,7 @@ export type SerialisedSubControl = {
 
 export type SerialisedSubControlComponent = SerialisedSubControl & SerialisedComponent;
 
-export class SubControl extends Component {
+export class SubControl extends NetComponent {
     vector = new Vector();
     submarine!: SubmarineBehaviour;
 
@@ -20,7 +20,7 @@ export class SubControl extends Component {
         super.datagramDefinition();
         this.datagram = this.datagram.cloneAppend<SerialisedSubControl>({
             vector: datatype.vector32,
-            submarine: compDatatype.compId,
+            submarine: commonDatatype.compId,
         });
     }
 

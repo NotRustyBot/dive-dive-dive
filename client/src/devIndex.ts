@@ -46,11 +46,11 @@ fetch(baseDebugUrl + "/factories").then(async (r) => {
     }
 });
 
-document.addEventListener("click",(e)=>{
-    if(selectedFactory && showSpawnVisible){
+document.addEventListener("click", (e) => {
+    if (selectedFactory && showSpawnVisible) {
         e.stopPropagation();
         const worldCoords = DevAttach.windowToWorld(e);
-        fetch(baseDebugUrl + "/spawn/" + selectedFactory + `/${worldCoords.x}/${worldCoords.y}`);    
+        fetch(baseDebugUrl + "/spawn/" + selectedFactory + `/${worldCoords.x}/${worldCoords.y}`);
     }
 
 });
@@ -120,9 +120,8 @@ const setFactories = DevAttach.toggle("objectSpawn", (set?: boolean) => {
 
 
 
-BaseObject.attach = (baseobject: BaseObject) => {
-    DevAttach.attachTo(baseobject);
-}
+BaseObject.attach = DevAttach.attachTo;
+BaseObject.detach = DevAttach.detachFrom;
 
 
 const keys: Record<string, boolean> = {}

@@ -1,12 +1,12 @@
 import { AutoView, Datagram, datatype } from "./datagram";
 
 export type HandshakeRequest = {
-    clientId: string;
+    clientId: number;
     secret: string;
 }
 
 export type HandshakeReply = {
-    clientId: string;
+    clientId: number;
     response: string;
     motd: string;
 }
@@ -22,16 +22,16 @@ export enum headerId {
 export class NetManager {
     static connectRequest = new Datagram();
     static connectReply = new Datagram();
-    static identity = "";
+    static identity = 0;
 
     static initDatagrams() {
         this.connectRequest.append<HandshakeRequest>({
-            clientId: datatype.string,
+            clientId: datatype.uint32,
             secret: datatype.string,
         });
 
         this.connectReply.append<HandshakeReply>({
-            clientId: datatype.string,
+            clientId: datatype.uint32,
             response: datatype.string,
             motd: datatype.string,
         });

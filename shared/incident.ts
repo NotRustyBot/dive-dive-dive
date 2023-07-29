@@ -1,4 +1,4 @@
-import { Component } from "./component";
+import { NetComponent } from "./netComponent";
 
 export type IncidentHandler = (e: any) => any;
 
@@ -20,7 +20,7 @@ export class IncidentRotuer {
             route.unsubscribe(component);
     }
 
-    fire(name: string, params: any) {
+    fire(name: string, params?: any) {
         let route = this.routes.get(name);
         if (!route) {
             route = new IncidentRotue(name);

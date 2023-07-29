@@ -1,5 +1,5 @@
-import { Component, Serialisable, SerialisedComponent } from "./component";
-import { Area, Layer } from "./physics/chunks";
+import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
+import { Area, Layer, RectInAreas } from "./physics/chunks";
 import { Vector, Vectorlike } from "./types";
 import { BaseObject } from "./baseObject";
 import { datatype } from "./datagram";
@@ -16,10 +16,10 @@ export type SerialisedHitboxComponent = SerialisedHitbox & SerialisedComponent;
 
 export type Overlap = {
     offset: Vectorlike;
-    with: Hitbox;
+    with: RectInAreas;
 }
 
-export class Hitbox extends Component {
+export class Hitbox extends NetComponent {
     inAreas = new Set<Area>();
     boundOffsets: Array<Vectorlike> = [];
     size = 0;
@@ -63,23 +63,23 @@ export class Hitbox extends Component {
     }
 
     override onRemove(): void {
-        Layer.removeObject(this);
+        this.layer.removeObject(this);
     }
 
     setLayer(layer: Layer) {
         this.layer = layer;
-        Layer.addObject(this);
+        this.layer.addObject(this);
         this.invalidateCache();
     }
 
     move() {
-        Layer.moveObject(this, this.parent.position.result());
+        this.layer.moveObject(this, this.parent.position.result());
         this.checkCollisions();
     }
 
     checkCollisions() {
         this.overlaps = [];
-        const toCheck = new Set<Hitbox>();
+        const toCheck = new Set<RectInAreas>();
         for (const area of this.inAreas) {
             for (const box of area.members) {
                 if (box == this) continue;
@@ -92,7 +92,7 @@ export class Hitbox extends Component {
         }
     }
 
-    checkAgainst(that: Hitbox) {
+    checkAgainst(that: RectInAreas) {
         const small_epsilon = 0;
         if (this.x1 < that.x2 && this.x2 > that.x1 &&
             this.y1 < that.y2 && this.y2 > that.y1) {
@@ -149,7 +149,7 @@ export class Hitbox extends Component {
         this.layerId = data.layer;
     }
 
-    init(): void {
+    override init(): void {
         this.position = this.parent.position.result();  
         this.updateBounds();
         this.setLayer(Layer.getById(this.layerId));

@@ -1,4 +1,4 @@
-import { SerialisedComponent, Component } from "./component";
+import { SerialisedComponent, NetComponent } from "./netComponent";
 import { datatype } from "./datagram";
 import { Vector, Vectorlike } from "./types";
 
@@ -9,7 +9,7 @@ export type SerialisedTransform = {
 
 export type SerialisedTransformComponent = SerialisedTransform & SerialisedComponent;
 
-export class Transform extends Component {
+export class Transform extends NetComponent {
     position = new Vector();
     rotation = 0;
 

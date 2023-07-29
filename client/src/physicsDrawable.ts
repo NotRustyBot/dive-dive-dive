@@ -3,7 +3,7 @@ import { BaseObject } from "@shared/baseObject";
 import { Physics } from "@shared/physics";
 import { ObjectScope } from "@shared/objectScope";
 import { PhysicsDrawable as MockPhysicsDrawable } from "@shared/mock/physicsDrawable";
-import { Sprite } from "pixi.js";
+import { Sprite, Texture } from "pixi.js";
 import { entityLayer } from "src";
 
 
@@ -20,6 +20,7 @@ export class PhysicsDrawable extends MockPhysicsDrawable {
         super.onRemove();
         ObjectScope.game.unsubscribe("draw", this);
         ObjectScope.game.unsubscribe("update", this);
+        this.sprite.destroy();
     }
 
     static override initialise(): void {
@@ -46,6 +47,7 @@ export class PhysicsDrawable extends MockPhysicsDrawable {
 
     override fromSerialisable(data: any) {
         super.fromSerialisable(data);
+        if(this.sprite) Texture.fromURL(this.url).then(texture => this.sprite.texture = texture);
     }
 
 }

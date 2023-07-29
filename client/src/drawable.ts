@@ -1,5 +1,5 @@
 
-import { Container, Sprite } from "pixi.js";
+import { Container, Sprite, Texture } from "pixi.js";
 import { Drawable as MockDrawable } from "@shared/mock/drawable";
 import { BaseObject } from "@shared/baseObject";
 import { ObjectScope } from "@shared/objectScope";
@@ -32,6 +32,7 @@ export class Drawable extends MockDrawable {
 
     override fromSerialisable(data: any) {
         super.fromSerialisable(data);
+        if(this.sprite) Texture.fromURL(this.url).then(texture => this.sprite.texture = texture);
     }
 
 }

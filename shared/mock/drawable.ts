@@ -1,5 +1,5 @@
 import { BaseObject } from "../baseObject";
-import { Component, Serialisable, SerialisedComponent } from "../component";
+import { NetComponent, Serialisable, SerialisedComponent } from "../netComponent";
 import { datatype } from "../datagram";
 
 
@@ -10,7 +10,7 @@ export type SerialisedDrawable = {
 
 export type SerialisedDrawableComponent = SerialisedDrawable & SerialisedComponent;
 
-export class Drawable extends Component {
+export class Drawable extends NetComponent {
     url!: string;
     
     

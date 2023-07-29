@@ -63,5 +63,4 @@ document.addEventListener("contextmenu", (e) => {
 import { initModules } from "./include"
 import { ServerInfo, serverMode } from "@shared/serverInfo";
 initModules();
-NetManager.identity = "test";
 Network.start();

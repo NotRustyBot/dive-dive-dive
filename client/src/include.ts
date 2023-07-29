@@ -1,4 +1,4 @@
-import { SubControl } from "./sumbarineControl"
+import { SubControl } from "./submarineControl"
 import { Drawable } from "./drawable"
 import { DynamicHitbox } from "../../shared/dynamicHitbox"
 import { Hitbox } from "../../shared/hitbox"

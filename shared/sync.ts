@@ -1,14 +1,13 @@
 import { NetManager as SyncManager } from "./netManager";
 import { BaseObject, SerialisedBaseObject } from "./baseObject";
-import { Component, SerialisedComponent, compDatatype } from "./component";
+import { NetComponent, SerialisedComponent, commonDatatype } from "./netComponent";
 import { AutoView, Datagram, datatype } from "./datagram";
 import { ObjectScope } from "./objectScope";
 
 export type ComponentAuthority = {
-    authority: string,
+    authority: number,
     id: number
 }
-
 
 export type SerialisedSync = {
     components: Array<ComponentAuthority>
@@ -17,13 +16,13 @@ export type SerialisedSync = {
 export type SerialisedSyncComponent = SerialisedSync & SerialisedComponent;
 
 class ComponentCacheInfo {
-    component: Component;
-    cache: Record<string, number> = {}
-    constructor(component: Component) {
+    component: NetComponent;
+    cache: Record<number, number> = {}
+    constructor(component: NetComponent) {
         this.component = component;
     }
 
-    needsUpdate(target: string): boolean {
+    needsUpdate(target: number): boolean {
         const targetState = this.cache[target];
         if (targetState === this.component.cacheId) {
 
@@ -34,18 +33,16 @@ class ComponentCacheInfo {
     }
 }
 
-export class Sync extends Component {
+export class Sync extends NetComponent {
     static localAuthority = new Set<Sync>()
     static componentAuthority = new Datagram().append<ComponentAuthority>({
-        authority: datatype.string,
-        id: compDatatype.compId
+        authority: datatype.uint32,
+        id: commonDatatype.compId
     });
-    cache = new Map<string, Map<number, ComponentCacheInfo>>();
-    get identity(): string {
+    cache = new Map<number, Map<number, ComponentCacheInfo>>();
+    get identity(): number {
         return SyncManager.identity;
     }
-
-
 
     static override datagramDefinition(): void {
         super.datagramDefinition();
@@ -55,7 +52,11 @@ export class Sync extends Component {
         this.cacheSize = (this.componentAuthority.calculateMinimalSize() + 2 * 12) * 32;
     }
 
-    authorize(components: Component[], authority?: string) {
+    override onRemove(): void {
+        Sync.localAuthority.delete(this);
+    }
+
+    authorize(components: NetComponent[], authority?: number) {
         const auth = authority ?? this.identity;
         if (!this.cache.get(auth)) this.cache.set(auth, new Map());
         for (const component of components) {
@@ -63,25 +64,38 @@ export class Sync extends Component {
         }
     }
 
-    writeAuthorityBits(view: AutoView, target: string) {
+    clearCache(identity: number) {
+        this.cache.delete(identity);
+    }
+
+    writeAuthorityBits(view: AutoView, target?: number) {
+        const bindex = view.index;
         this.parent.writeHeaderBits(view, ObjectScope.network);
         const caches = this.cache.get(this.identity);
         const index = view.index;
         let actualSize = 0;
         view.writeUint8(caches.size);
         for (const [id, cache] of caches) {
-            if (cache.needsUpdate(target)) {
+            if (!target || cache.needsUpdate(target)) {
                 cache.component.writeBits(view);
                 actualSize++;
             }
         }
+        
         view.setUint8(index, actualSize);
+
+        if(actualSize == 0) {
+            view.index = bindex;
+            return false;
+        }
+
+        return true;
     }
 
     writeAllBits(view: AutoView) {
         this.parent.writeHeaderBits(view, ObjectScope.network);
-        view.writeUint8(this.parent.components.size);
-        for (const [id, comp] of this.parent.components) {
+        view.writeUint8(this.parent.netComponents.size);
+        for (const [id, comp] of this.parent.netComponents) {
             comp.writeBits(view);
         }
     }
@@ -97,7 +111,7 @@ export class Sync extends Component {
         }
 
         for (let i = 0; i < compCount; i++) {
-            const compData = Component.dataFromBits(view);
+            const compData = NetComponent.dataFromBits(view);
             data.componentData.push(compData);
         }
 
@@ -137,7 +151,7 @@ export class Sync extends Component {
         }
     }
 
-    init(): void {
+    override init(): void {
         this.considerLocalAuthority();
     }
 }

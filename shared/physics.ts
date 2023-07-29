@@ -1,6 +1,6 @@
 
 import { BaseObject } from "./baseObject";
-import { Component, Serialisable, SerialisedComponent } from "./component";
+import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
 import { Vector } from "./types";
 import { Template, datatype } from "./datagram";
 import { ObjectScope } from "./objectScope";
@@ -13,7 +13,7 @@ export type SerialisedPhysics = {
 
 export type SerialisedPhysicsComponent = SerialisedPhysics & SerialisedComponent;
 
-export class Physics extends Component {
+export class Physics extends NetComponent {
     velocity: Vector = new Vector();
     rotation = 0;
 

@@ -1,6 +1,9 @@
-import { Vector } from "../types";
+import { Vector, Vectorlike } from "../types";
 import { BaseObject } from "../baseObject";
 import { Hitbox } from "../hitbox";
+
+
+export type RectInAreas = { position: Vector, x1: number, y1: number, x2: number, y2: number, inAreas: Set<Area>, parent: BaseObject }
 
 //#region server
 export class Layer {
@@ -8,10 +11,11 @@ export class Layer {
     static index = 0;
     areas: Map<number, Area>;
     id: number;
+    size = 1000;
     constructor() {
         this.areas = new Map();
         this.id = Layer.index;
-        Layer.list.set(Layer.index, this);
+        Layer.list.set(Layer.index++, this);
     }
 
     static getById(id: number): Layer {
@@ -20,157 +24,103 @@ export class Layer {
         throw "no layer with this id"
     }
 
-    static addObject(physicsObject: Hitbox) {
-        let layer = physicsObject.layer;
-        let gridCoords = Layer.toGrid(physicsObject.position);
-        let gridIndex = Layer.toGridIndex(gridCoords);
-        let area = layer.areas.get(gridIndex) || new Area(layer, gridCoords);
-        area.members.add(physicsObject);
-        physicsObject.inAreas.add(area);
-
-        let s = physicsObject.size;
-        if (s == 0) return;
-
-        let top = false;
-        let bottom = false;
-        let left = false;
-        let right = false;
-
-        let pos = physicsObject.position;
-
-        if (pos.x + s > area.gridPosition.x * Area.size + Area.size) {
-            let thisGridCoords = new Vector(gridCoords.x + 1, gridCoords.y);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            let thisArea = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            thisArea.addObject(physicsObject);
-            right = true;
-        }
-        if (pos.y + s > area.gridPosition.y * Area.size + Area.size) {
-            let thisGridCoords = new Vector(gridCoords.x, gridCoords.y + 1);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            let thisArea = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            thisArea.addObject(physicsObject);
-            top = true;
-        }
-
-        if (pos.x - s < area.gridPosition.x * Area.size) {
-            let thisGridCoords = new Vector(gridCoords.x - 1, gridCoords.y);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            let thisArea = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            thisArea.addObject(physicsObject);
-            left = true;
-        }
-        if (pos.y - s < area.gridPosition.y * Area.size) {
-            let thisGridCoords = new Vector(gridCoords.x, gridCoords.y - 1);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            let thisArea = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            thisArea.addObject(physicsObject);
-            bottom = true;
-        }
-
-        //corners
-
-        if (top && right) {
-            let thisGridCoords = new Vector(gridCoords.x + 1, gridCoords.y + 1);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            area = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            area.addObject(physicsObject);
-        }
-
-        if (top && left) {
-            let thisGridCoords = new Vector(gridCoords.x - 1, gridCoords.y + 1);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            area = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            area.addObject(physicsObject);
-        }
-
-        if (bottom && right) {
-            let thisGridCoords = new Vector(gridCoords.x + 1, gridCoords.y - 1);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            area = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            area.addObject(physicsObject);
-        }
-
-        if (bottom && left) {
-            let thisGridCoords = new Vector(gridCoords.x - 1, gridCoords.y - 1);
-            gridIndex = Layer.toGridIndex(thisGridCoords);
-            area = layer.areas.get(gridIndex) || new Area(layer, thisGridCoords);
-            area.addObject(physicsObject);
+    addObject(rect: RectInAreas) {
+        for (let x = this.toGridAxis(rect.x1); x <= this.toGridAxis(rect.x2); x++) {
+            for (let y = this.toGridAxis(rect.y1); y <= this.toGridAxis(rect.y2); y++) {
+                let gridCoords = { x, y };
+                let gridIndex = Layer.toGridIndex(gridCoords);
+                let area = this.areas.get(gridIndex);
+                if(!area){
+                    area = new Area(this, gridCoords);
+                    this.areas.set(gridIndex, area);
+                }
+                area.members.add(rect);
+                rect.inAreas.add(area);
+            }
         }
     }
 
-    static removeObject(physicsObject: Hitbox) {
+    removeObject(physicsObject: RectInAreas) {
         for (const area of physicsObject.inAreas) {
             area.members.delete(physicsObject);
         }
         physicsObject.inAreas.clear();
     }
 
-    static getObjects(layer: Layer, position: Vector) {
-        let area = layer.areas.get(Layer.toGridIndex(Layer.toGrid(position)));
-        if (area == undefined) return new Set();
+    getObjects(position: Vectorlike) {
+        return this.getObjectsByGrid(this.toGrid(position));
+    
+    }
+
+    getObjectsByGrid(grid: Vectorlike) {
+        let area = this.areas.get(Layer.toGridIndex(grid));
+        if (area == undefined) return new Set<RectInAreas>();
         return area.members;
     }
 
-    static moveObject(physicsObject: Hitbox, position: Vector) {
-        const orig = physicsObject.position;
-        let updateRequired = false;
-        for (let i = 0; i < 4; i++) {
-            const vect = physicsObject.boundOffsets[i];
-            if (
-                this.toGridAxis(orig.x + vect.x) != this.toGridAxis(position.x + vect.x) ||
-                this.toGridAxis(orig.y + vect.y) != this.toGridAxis(position.y + vect.y)
-            ) {
-                updateRequired = true;
-                break;
+    getNearbyObjects(position: Vector, range: number) {
+        const result: Array<Set<RectInAreas>> = [];
+        for (let x = this.toGridAxis(position.x - range); x <= this.toGridAxis(position.x + range); x++) {
+            for (let y = this.toGridAxis(position.y - range); y <= this.toGridAxis(position.y + range); y++) {
+                result.push(this.getObjectsByGrid({ x, y }));
             }
         }
+        return result;
+    }
+
+    moveObject(rect: RectInAreas, position: Vector) {
+        const orig = rect.position;
+        const offset = position.diff(orig);
+        let updateRequired =
+            this.toGridAxis(rect.x1) != this.toGridAxis(rect.x1 + offset.x) ||
+            this.toGridAxis(rect.y1) != this.toGridAxis(rect.y1 + offset.y) ||
+            this.toGridAxis(rect.x2) != this.toGridAxis(rect.x2 + offset.x) ||
+            this.toGridAxis(rect.y2) != this.toGridAxis(rect.y2 + offset.y)
+
 
         if (updateRequired) {
-            Layer.removeObject(physicsObject);
-            physicsObject.position = position;
-            Layer.addObject(physicsObject);
+            this.removeObject(rect);
+            rect.position.set(position.x, position.y)
+            this.addObject(rect);
         } else {
-            physicsObject.position = position;
+            rect.position.set(position.x, position.y)
         }
     }
 
-    static toGridAxis(scalar: number): number {
-        return Math.floor(scalar / Area.size);
+    toGridAxis(scalar: number): number {
+        return Math.floor(scalar / this.size);
     }
 
-    static toGrid(position: Vector): Vector {
-        return new Vector(Layer.toGridAxis(position.x), Layer.toGridAxis(position.y));
+    toGrid(position: Vectorlike): Vector {
+        return new Vector(this.toGridAxis(position.x), this.toGridAxis(position.y));
     }
 
-    static toGridIndex(vector: Vector): number {
+    static toGridIndex(vector: Vectorlike): number {
         return ((vector.x & 0xffff) << 16) | (vector.y & 0xffff);
     }
 }
 
 export class Area {
-    members: Set<Hitbox> = new Set();
+    members: Set<RectInAreas> = new Set();
     gridPosition: Vector;
     positionIndex: number;
     layer: Layer;
-    constructor(layer: Layer, position: Vector) {
+    constructor(layer: Layer, position: Vectorlike) {
         this.gridPosition = new Vector(position.x, position.y);
         this.positionIndex = Layer.toGridIndex(this.gridPosition);
         this.layer = layer;
         layer.areas.set(this.positionIndex, this);
     }
 
-    addObject(physicsObject: Hitbox) {
+    addObject(physicsObject: RectInAreas) {
         this.members.add(physicsObject);
         physicsObject.inAreas.add(this);
     }
 
-    removeObject(physicsObject: Hitbox) {
+    removeObject(physicsObject: RectInAreas) {
         this.members.delete(physicsObject);
         physicsObject.inAreas.delete(this);
     }
-
-    static size = 1000;
 }
 
 //#endregion server
