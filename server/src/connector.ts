@@ -1,11 +1,12 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/netManager"
 import { AutoView } from "@shared/datagram";
-import { Message, ObjectScope, ServerInfo, Sync } from "./registry";
+import { Message, ObjectScope, ServerInfo, Sync, Transform } from "./registry";
 import { Client } from "./client";
 import { createSubmarine } from "./main";
 import { Detector } from "./server/detector";
-import { messageType } from "@shared/messages";
+import { messageType, netMessage } from "@shared/messages";
+import { RangeDetector } from "./server/rangeDetector";
 
 
 export class Connector {
@@ -28,8 +29,6 @@ export class Connector {
 
         this.websocket.on('connection', (clientSocket) => {
             try {
-
-
                 clientSocket.addListener("message", (message: Buffer) => {
                     let receiveBuffer = message.buffer.slice(
                         message.byteOffset,
@@ -89,16 +88,51 @@ export class Connector {
                                 break;
                             case headerId.message:
                                 const msg = Message.read(autoview);
+                                this.parseMessage(msg, this.clients.get(clientSocket));
                                 break;
                         }
                     }
                 });
             } catch (error) {
                 console.error(error);
-                
             }
         });
     }
+
+    parseMessage(msg: netMessage, client: Client) {
+        switch (msg.typeId) {
+            case messageType.debugCam:
+                if (msg.enabled) {
+                    client.debugCam = createDebugCam(client);
+                } else {
+                    client.debugCam.remove();
+                    client.debugCam = undefined;
+                }
+                break;
+
+            case messageType.debugCamPosition:
+                if (client.debugCam) {
+                    const rangeDetector = client.debugCam.getComponentByType(RangeDetector);
+                    rangeDetector.range = msg.range / 2;
+                    client.debugCam.position.set(msg.position.x, msg.position.y);
+                }
+                break;
+        }
+    }
+}
+
+
+function createDebugCam(client: Client) {
+    const cam = ObjectScope.game.createObject();
+    const transfrom = cam.addComponent(Transform);
+    const detector = cam.addComponent(RangeDetector);
+    detector.subscribe(client);
+
+    detector.init();
+    transfrom.init();
+
+    return cam;
+
 }
 
 

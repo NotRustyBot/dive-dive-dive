@@ -74,13 +74,13 @@ float noise(vec3 p) {
 void main(void) {
     vec2 mul = (outputFrame.zw * inputSize.zw);
     vec2 properCoord = vTextureCoord;
-    vec2 worldCoords = properCoord * outputFrame.zw - uCamera * uScale;
+    vec2 worldCoords = (properCoord * outputFrame.zw - outputFrame.zw * 0.5f) / uScale - uCamera;
     vec4 tex = texture(uSampler, (properCoord) * mul);
     float dist = (uRange - noise(uTime * 10.f - properCoord.y * 30.f) * 10.f) * uScale;
     float visibility = 0.75f - min(pow(distance(properCoord * outputFrame.zw, uCoords) / dist, 1.5f), 1.f);
 
-    float dotNoise = noise(worldCoords * 0.2f) * noise(worldCoords * 0.25f) * noise(vec3(worldCoords * (0.1f), uTime * 0.3f + properCoord.x));
-    float dotValue = pow(dotNoise, 2.f);
+    float dotNoise = noise(worldCoords * 0.05f) * noise(worldCoords * 0.055f) * noise(vec3(worldCoords * (0.04f), uTime * 0.3f + properCoord.x));
+    float dotValue = pow(dotNoise, 3.f);
     float dotPower = 0.5f;
     vec4 dots = vec4(vec3(0) * (1.f - dotPower) + dotPower * vec3(dotValue), 1);
     //dots.rgb *= visibility;

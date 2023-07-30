@@ -10,6 +10,7 @@ import { SubmarineBehaviour } from "@shared/submarine";
 import { SubControl } from "./submarineControl";
 import { Vector } from "@shared/types";
 import { keys } from "./control";
+import { messageType } from "@shared/messages";
 
 const game = ObjectScope.game;
 export const app = new PIXI.Application<HTMLCanvasElement>({ backgroundColor: "#112244" });
@@ -79,25 +80,47 @@ app.ticker.add((dt) => {
     if (SubControl.current) {
         const subX = SubControl.current.submarine.parent.position.x;
         const subY = SubControl.current.submarine.parent.position.y;
-
         currentSubPos.set(subX, subY);
-        
-        const X = (-subX + Camera.position.x * 8) / 9;
-        const Y = (-subY + Camera.position.y * 8) / 9;
-        Camera.position.set(X, Y)
 
+        Camera.glide(SubControl.current.submarine.parent.position);
     }
 
-    if(keys["+"]){
-        Camera.scale *= 0.99;        
+    if (keys["+"]) {
+        Camera.scale *= 0.99;
     }
 
-    if(keys["-"]){
-        Camera.scale /= 0.99;        
+    if (keys["-"]) {
+        Camera.scale /= 0.99;
     }
+
+    console.log(keys);
+    if (keys["c"] == 1) {
+        Camera.detached = !Camera.detached;
+        if (Camera.detached) {
+            realLayer.filters = [];
+            Network.message({ enabled: 1, typeId: messageType.debugCam });
+        } else {
+            realLayer.filters = [new ScreenFilter()];
+            Network.message({ enabled: 0, typeId: messageType.debugCam });
+        }
+    }
+
+    if (Camera.detached) {
+        if (keys["w"]) Camera.position.y += 10 / Camera.scale;
+        if (keys["a"]) Camera.position.x += 10 / Camera.scale;
+        if (keys["s"]) Camera.position.y -= 10 / Camera.scale;
+        if (keys["d"]) Camera.position.x -= 10 / Camera.scale;
+        Network.message({
+            position: Camera.position.result().mult(-1),
+            typeId: messageType.debugCamPosition,
+            range: Camera.size.x / Camera.scale
+        });
+    }
+
     realLayer.scale.set(Camera.scale);
     realLayer.position.set(Camera.position.x * Camera.scale, Camera.position.y * Camera.scale);
     game.fire("draw", dt);
+    Network.sendMessages();
     Network.sendObjects();
 });
 

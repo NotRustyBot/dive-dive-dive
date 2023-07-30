@@ -29,10 +29,10 @@ export class Network {
             })
             this.send();
         });
-        this.websocket.addEventListener("message", this.message);
+        this.websocket.addEventListener("message", this.parseMessage);
     }
 
-    static message(message: any) {
+    static parseMessage(message: any) {
         const view = new AutoView(message.data);
         while (view.index < view.buffer.byteLength) {
 
@@ -72,10 +72,23 @@ export class Network {
         }
     }
 
+    private static messages = new Array<netMessage>();
+    static message(msg: netMessage){
+        this.messages.push(msg);
+    }
+
     static send() {
         if (this.websocket.readyState != this.websocket.OPEN) return
         this.websocket.send(this.autoview.buffer.slice(0, this.autoview.index));
         this.autoview.index = 0;
+    }
+
+
+    static sendMessages() {
+        for (const msg of this.messages) {
+            Message.write(Network.autoview, msg);
+        }
+        this.messages = [];
     }
 
     static sendObjects() {

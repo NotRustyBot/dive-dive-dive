@@ -9,6 +9,7 @@ document.body.innerHTML = html;
 
 import { app } from "./index";
 import { DevAttach } from "./devDebugAttach";
+import { Camera } from "./camera";
 
 let factories: Array<string> = [];
 
@@ -49,7 +50,7 @@ fetch(baseDebugUrl + "/factories").then(async (r) => {
 document.addEventListener("click", (e) => {
     if (selectedFactory && showSpawnVisible) {
         e.stopPropagation();
-        const worldCoords = DevAttach.windowToWorld(e);
+        const worldCoords = Camera.toWorld(e);
         fetch(baseDebugUrl + "/spawn/" + selectedFactory + `/${worldCoords.x}/${worldCoords.y}`);
     }
 
