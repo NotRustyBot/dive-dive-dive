@@ -31,7 +31,6 @@ export class Message {
             typeId: messageIdDataType,
             objectId: commonDatatype.objectId
         }),
-
     };
     static write<T extends netMessage>(view: AutoView, data: T) {
         const typeId = data.typeId;

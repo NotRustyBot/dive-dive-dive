@@ -12,11 +12,13 @@ export type SerialisedSubControl = {
 
 
 export class SubControl extends MockSubControl {
+    static current: SubControl;
     override ["input"](params: any) {
         this.vector.set(0, 0);
-        console.log(NetManager.identity, this.submarine.owner);
         
         if(NetManager.identity != this.submarine.owner) return;
+        SubControl.current = this;
+
         if (keys["d"]) this.vector.x = 1;
         if (keys["a"]) this.vector.x = -1;
         if (keys["w"]) this.vector.y = -1;

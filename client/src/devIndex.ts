@@ -13,8 +13,8 @@ import { DevAttach } from "./devDebugAttach";
 let factories: Array<string> = [];
 
 
-DevAttach.container = app.stage;
 DevAttach.init();
+app.stage.addChild(DevAttach.container);
 DevAttach.toggle("drawDebug", (set?: boolean) => {
     if (set != undefined) DevAttach.drawDebug = set;
     return DevAttach.drawDebug;
@@ -133,38 +133,6 @@ window.addEventListener("keyup", (e) => {
     keys[e.key] = false;
 })
 
-
-let scale = 1;
-const devCamSpeed = 20;
-const pow = 0.1;
-setInterval(() => {
-    if (keys["+"]) {
-        scale *= 1.1;
-        app.stage.scale.set(scale);
-    }
-
-    if (keys["-"]) {
-        scale /= 1.1;
-        app.stage.scale.set(scale);
-    }
-
-    if (keys["ArrowUp"]) {
-        app.stage.position.y += devCamSpeed / scale ** pow;
-    }
-
-    if (keys["ArrowDown"]) {
-        app.stage.position.y -= devCamSpeed / scale ** pow;
-    }
-
-    if (keys["ArrowLeft"]) {
-        app.stage.position.x += devCamSpeed / scale ** pow;
-    }
-
-    if (keys["ArrowRight"]) {
-        app.stage.position.x -= devCamSpeed / scale ** pow;
-    }
-
-}, 50)
 
 const debugPort = 3001;
 window.addEventListener("keydown", (e) => {
