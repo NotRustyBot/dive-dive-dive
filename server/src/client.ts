@@ -17,7 +17,7 @@ export class Client {
 
     tracked = new Map<Detectable, tracking>();
 
-    messages: Array<netMessage> = [];
+    private messages: Array<netMessage> = [];
 
     constructor(socket: WebSocket, id: number, secret: string) {
         this.socket = socket;
@@ -33,7 +33,7 @@ export class Client {
     track(detectable: Detectable) {
         if (detectable == undefined) {
             console.log("what");
-            
+
         }
         if (!this.tracked.has(detectable)) {
             this.tracked.set(detectable, { initialised: false, wasTracked: true });
@@ -45,12 +45,16 @@ export class Client {
     untrack(detectable: Detectable) {
         const tracked = this.tracked.get(detectable);
         if (tracked) {
-            this.messages.push({
+            this.message({
                 typeId: messageType.untrackObject,
                 objectId: detectable.sync.parent.getId(ObjectScope.network)
             });
             this.tracked.delete(detectable);
         }
+    }
+
+    message(data: netMessage) {
+        this.messages.push(data);
     }
 
     untrackAll() {

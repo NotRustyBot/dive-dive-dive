@@ -47,7 +47,7 @@ function createInfoObject() {
 createInfoObject();
 
 
-const clientSubs = new Map<number, SubmarineBehaviour>();
+export const clientSubs = new Map<number, SubmarineBehaviour>();
 export function createSubmarine(client: Client) {
     const sub = game.createObject();
     const net = sub.addComponent(Sync);
@@ -85,7 +85,7 @@ export function createSubmarine(client: Client) {
 }
 
 const tps = 20;
-const sendView = new AutoView(new ArrayBuffer(10000));
+const sendView = new AutoView(new ArrayBuffer(100000));
 setInterval(() => {
     if (serverInfo.mode == serverMode.update || (serverInfo.mode == serverMode.pause && serverInfo.tick == 1)) {
         const dt = 1 / tps;

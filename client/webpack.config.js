@@ -24,7 +24,7 @@ module.exports = (env) => {
                     use: [{ loader: "ts-loader", options: { onlyCompileBundledFiles: true } }],
                 },
                 {
-                    test: /\.html$/,
+                    test: /\.html|\.frag|\.vert$/,
                     use: "raw-loader",
                 },
             ],

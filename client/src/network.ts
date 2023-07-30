@@ -74,8 +74,6 @@ export class Network {
 
     static send() {
         if (this.websocket.readyState != this.websocket.OPEN) return
-        console.log(this.autoview.buffer.slice(0, this.autoview.index));
-
         this.websocket.send(this.autoview.buffer.slice(0, this.autoview.index));
         this.autoview.index = 0;
     }

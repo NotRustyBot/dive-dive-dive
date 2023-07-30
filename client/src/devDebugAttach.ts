@@ -10,12 +10,13 @@ import { Component, Serialisable } from "@shared/component";
 import { Sync } from "@shared/sync";
 import { Network } from "./network";
 import { ServerInfo, serverMode } from "@shared/serverInfo";
+import { Camera } from "./camera";
 
 
 
 export class DevAttach {
 
-    static container: Container;
+    static container = new Container();
     static attached = new Set<DevAttach>();
     static lookup = new Map<BaseObject, DevAttach>();
     //not actually a parent
@@ -26,7 +27,7 @@ export class DevAttach {
     hitbox?: Hitbox;
     drawable?: Drawable;
 
-    static drawDebug = true;
+    static drawDebug = false;
     static showComponents = false;
     static showObjects = false;
 
@@ -72,7 +73,7 @@ export class DevAttach {
     }
 
     static windowToWorld(v: Vectorlike): Vector {
-        return new Vector((v.x - this.container.position.x) / this.container.scale.x, (v.y - this.container.position.y) / this.container.scale.y)
+        return new Vector((v.x - Camera.size.x/2) / Camera.scale - Camera.position.x, (v.y - Camera.size.y/2) / Camera.scale - Camera.position.y);
     }
 
     private constructor(baseobject: BaseObject) {
@@ -142,6 +143,12 @@ export class DevAttach {
     }
 
     static ["draw"](dt: number) {
+        DevAttach.container.position.set(Camera.position.x * Camera.scale, Camera.position.y * Camera.scale);
+        DevAttach.container.scale.set(Camera.scale);
+
+        console.log(this.windowToWorld(new Vector()));
+
+
         if (ServerInfo.get() && ServerInfo.get().mode == serverMode.pause) {
             this.playPauseButton.classList.remove("on");
             this.playPauseButton.classList.add("off");

@@ -21,7 +21,7 @@ export class SubStats {
 
     public get verticalDrag(): number {
         return (this.length * this.diameter * waterDrag) * this.roughness
-    }
+    }   
 
     public get horizontalDrag(): number {
         return (this.diameter * waterDrag) * this.roughness
