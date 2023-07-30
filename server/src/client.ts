@@ -5,12 +5,11 @@ import { headerId } from "@shared/netManager";
 import { messageType, netMessage } from "@shared/messages";
 import { Detectable } from "./server/detectable";
 import { IncidentRotuer, trippable } from "@shared/incident";
+import { BaseObject } from "@shared/baseObject";
 
 type tracking = { initialised: boolean, wasTracked: boolean }
 
 export class Client {
-
-
     private socket: WebSocket;
     private secret: string;
     id: number;
@@ -25,16 +24,14 @@ export class Client {
         this.id = id;
     }
 
+    debugCam?: BaseObject;
+
     send(view: AutoView) {
         const buffer = view.buffer.slice(0, view.index);
         this.socket.send(buffer);
     }
 
     track(detectable: Detectable) {
-        if (detectable == undefined) {
-            console.log("what");
-
-        }
         if (!this.tracked.has(detectable)) {
             this.tracked.set(detectable, { initialised: false, wasTracked: true });
         } else {

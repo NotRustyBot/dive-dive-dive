@@ -1,13 +1,16 @@
 import { commonDatatype } from "./netComponent";
 import { AutoView, Datagram, datatype } from "./datagram";
 import { headerId } from "./netManager";
+import { Vector } from "./types";
 
 export enum messageType {
     tick = 2,
     untrackObject = 3,
+    debugCam = 4,
+    debugCamPosition = 5,
 }
 
-export type netMessage = tickMessage | untrackObjectMessage
+export type netMessage = tickMessage | untrackObjectMessage | debugCamMessage | debugCamPositionMessage
 
 type tickMessage = {
     typeId: messageType.tick
@@ -17,6 +20,20 @@ type untrackObjectMessage = {
     typeId: messageType.untrackObject
     objectId: number
 }
+
+type debugCamMessage = {
+    typeId: messageType.debugCam
+    enabled: number
+}
+
+
+type debugCamPositionMessage = {
+    typeId: messageType.debugCamPosition
+    position: Vector,
+    range: number
+}
+
+
 
 const messageIdDataType = datatype.uint8;
 
@@ -30,6 +47,15 @@ export class Message {
         [messageType.untrackObject]: new Datagram().append<untrackObjectMessage>({
             typeId: messageIdDataType,
             objectId: commonDatatype.objectId
+        }),
+        [messageType.debugCam]: new Datagram().append<debugCamMessage>({
+            typeId: messageIdDataType,
+            enabled: datatype.uint8
+        }),
+        [messageType.debugCamPosition]: new Datagram().append<debugCamPositionMessage>({
+            typeId: messageIdDataType,
+            position: datatype.vector32,
+            range: datatype.float32
         }),
     };
     static write<T extends netMessage>(view: AutoView, data: T) {

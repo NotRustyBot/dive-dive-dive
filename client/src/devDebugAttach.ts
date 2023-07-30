@@ -68,12 +68,8 @@ export class DevAttach {
         ObjectScope.game.subscribe("draw", this);
         this.playPauseButton = document.getElementById("timeStop") as HTMLInputElement;
         window.addEventListener("click", (e) => {
-            this.handleClick(this.windowToWorld(e));
+            this.handleClick(Camera.toWorld(e));
         });
-    }
-
-    static windowToWorld(v: Vectorlike): Vector {
-        return new Vector((v.x - Camera.size.x/2) / Camera.scale - Camera.position.x, (v.y - Camera.size.y/2) / Camera.scale - Camera.position.y);
     }
 
     private constructor(baseobject: BaseObject) {
@@ -146,7 +142,6 @@ export class DevAttach {
         DevAttach.container.position.set(Camera.position.x * Camera.scale, Camera.position.y * Camera.scale);
         DevAttach.container.scale.set(Camera.scale);
 
-        console.log(this.windowToWorld(new Vector()));
 
 
         if (ServerInfo.get() && ServerInfo.get().mode == serverMode.pause) {
