@@ -12,6 +12,7 @@ import { Detectable } from "./server/detectable";
 import { RangeDetector } from "./server/rangeDetector";
 import { RangeDetectable } from "./server/rangeDetectable";
 import { Client } from "./client";
+import { drawableExtra } from "@shared/mock/drawable";
 
 
 startDevServer();
@@ -33,12 +34,10 @@ export const physicsLayers: Record<physicsLayerEnum, Layer> = {
     [physicsLayerEnum.detectable]: new Layer(),
 }
 
-let serverInfo: ServerInfo;
-let serverInfoSync: Sync;
 function createInfoObject() {
     const serverInfoObject = ObjectScope.network.createObject();
-    serverInfo = serverInfoObject.addComponent(ServerInfo);
-    serverInfoSync = serverInfoObject.addComponent(Sync);
+    const serverInfo = serverInfoObject.addComponent(ServerInfo);
+    const serverInfoSync = serverInfoObject.addComponent(Sync);
     serverInfoSync.authorize([serverInfo], NetManager.identity);
     serverInfoSync.init();
     serverInfo.init();
@@ -66,10 +65,12 @@ export function createSubmarine(client: Client) {
     submarine.hitbox = hitbox;
     hitbox.sides = new Vector(250, 100);
     drawable.url = "/assets/brandy.png";
+    drawable.extra = drawableExtra.entity;
     hitbox.layerId = 0;
     net.authorize([submarine, transform, drawable, physics]);
     net.authorize([control], client.id);
     detector.subscribe(client);
+    detector.range = 4000;
     physics.init();
     hitbox.init();
     control.init();
@@ -85,8 +86,9 @@ export function createSubmarine(client: Client) {
 }
 
 const tps = 20;
-const sendView = new AutoView(new ArrayBuffer(100000));
+const sendView = new AutoView(new ArrayBuffer(1000000));
 setInterval(() => {
+    const serverInfo = ServerInfo.get();
     if (serverInfo.mode == serverMode.update || (serverInfo.mode == serverMode.pause && serverInfo.tick == 1)) {
         const dt = 1 / tps;
         game.fire("input");
@@ -96,7 +98,7 @@ setInterval(() => {
         game.fire("post-collision", dt * 60);
 
     }
-    
+
     Detector.processAll();
     sendView.index = 0;
 
@@ -104,8 +106,8 @@ setInterval(() => {
     const sbindex = sendView.index;
     sendView.writeUint16(0);
 
-    if(serverInfoSync.writeAuthorityBits(sendView)){
-        sendView.setUint16(sbindex,1);
+    if (ServerInfo.get().parent.getComponentByType(Sync).writeAuthorityBits(sendView)) {
+        sendView.setUint16(sbindex, 1);
     }
 
 
@@ -124,7 +126,7 @@ setInterval(() => {
 
 }, 1000 / tps);
 
-export function clearAll(){
+export function clearAll() {
     for (const [sw, client] of connector.clients) {
         client.untrackAll();
     }
@@ -135,7 +137,7 @@ export function clearAll(){
         bo.remove();
     }
 
-    for(const [id, layer] of Layer.list){
+    for (const [id, layer] of Layer.list) {
         for (const [aid, area] of layer.areas) {
             area.members.clear();
         }

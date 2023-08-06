@@ -10,6 +10,7 @@ import { Vector, Vectorlike } from '@shared/types';
 import { Detectable } from './server/detectable';
 import { RangeDetectable } from './server/rangeDetectable';
 import { Detector } from './server/detector';
+import { drawableExtra } from '@shared/mock/drawable';
 
 export function startDevServer() {
     const assetsPath = "../client/static/assets/";
@@ -99,6 +100,7 @@ registerFactory("terrain", (v) => {
     const detectable = terrain.addComponent(RangeDetectable);
     hitbox.sides = new Vector(220, 220);
     drawable.url = "/assets/terrain.png";
+    drawable.extra = drawableExtra.terrain;
     hitbox.layerId = 0;
     transform.position.set(v.x, v.y);
     sync.authorize([transform]);
@@ -117,6 +119,7 @@ registerFactory("image", (v) => {
     const sync = image.addComponent(Sync);
     const detectable = image.addComponent(RangeDetectable);
     drawable.url = "/assets/red.png";
+    drawable.extra = drawableExtra.background
     transform.position.set(v.x, v.y);
     sync.authorize([transform, drawable]);
     drawable.init();

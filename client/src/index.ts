@@ -1,22 +1,23 @@
-import * as PIXI from "pixi.js"
+import * as PIXI from "pixi.js";
 import { ObjectScope } from "@shared/objectScope";
 import { ScreenFilter } from "./filters/screen/screenFilter";
 import { Network } from "./network";
 import { Layer } from "@shared/physics/chunks";
 import { Camera } from "./camera";
-import { initModules } from "./include"
+import { initModules } from "./include";
 import { ServerInfo, serverMode } from "@shared/serverInfo";
 import { SubmarineBehaviour } from "@shared/submarine";
 import { SubControl } from "./submarineControl";
 import { Vector } from "@shared/types";
 import { keys } from "./control";
 import { messageType } from "@shared/messages";
+import { drawableExtra } from "@shared/mock/drawable";
+import { TerrainFilter } from "./filters/terrain/terrainFilter";
 
 const game = ObjectScope.game;
 export const app = new PIXI.Application<HTMLCanvasElement>({ backgroundColor: "#112244" });
 export let currentSubmarine: SubmarineBehaviour;
-const terrainLayer = new Layer();
-
+const terrainPhysicsLayer = new Layer();
 
 export let time = 0;
 
@@ -33,15 +34,20 @@ function resize() {
     Camera.size.y = window.innerHeight;
 }
 
-
 export const realLayer = new PIXI.Container();
+export const backgroundLayer = new PIXI.Container();
+export const terrainLayer = new PIXI.Container();
 export const entityLayer = new PIXI.Container();
+realLayer.addChild(backgroundLayer);
+realLayer.addChild(terrainLayer);
 realLayer.addChild(entityLayer);
 
 app.stage.addChild(realLayer);
 window.onresize = resize;
 realLayer.filterArea = new PIXI.Rectangle();
+terrainLayer.filterArea = realLayer.filterArea;
 realLayer.filters = [new ScreenFilter()];
+terrainLayer.filters = [new TerrainFilter()];
 resize();
 
 export const currentSubPos = new Vector();
@@ -93,7 +99,6 @@ app.ticker.add((dt) => {
         Camera.scale /= 0.99;
     }
 
-    console.log(keys);
     if (keys["c"] == 1) {
         Camera.detached = !Camera.detached;
         if (Camera.detached) {
@@ -113,7 +118,7 @@ app.ticker.add((dt) => {
         Network.message({
             position: Camera.position.result().mult(-1),
             typeId: messageType.debugCamPosition,
-            range: Camera.size.x / Camera.scale
+            range: Camera.size.x / Camera.scale,
         });
     }
 
@@ -128,8 +133,24 @@ document.addEventListener("contextmenu", (e) => {
     e.preventDefault();
 });
 
+export function addChildByType(child: PIXI.Container, type: number) {
+    switch (type) {
+        case drawableExtra.background: 
+            backgroundLayer.addChild(child);
+            break;
 
+        case drawableExtra.terrain:
+            terrainLayer.addChild(child);
+            break;
 
+        case drawableExtra.entity:
+            entityLayer.addChild(child);
+            break;
+
+        default:
+            break;
+    }
+}
 
 initModules();
 Network.start();

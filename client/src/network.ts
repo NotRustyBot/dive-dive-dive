@@ -14,6 +14,7 @@ export class Network {
     static autoview = new AutoView(new ArrayBuffer(1000));
     static secret = "";
     static tempAuthority: Array<Sync> = [];
+    static sendCount = 0;
     static start() {
         NetManager.identity = parseInt(localStorage.getItem("sun_identity") ?? "0");
         this.secret = localStorage.getItem("sun_secret") ?? NetManager.makeId(32);
@@ -81,6 +82,7 @@ export class Network {
         if (this.websocket.readyState != this.websocket.OPEN) return
         this.websocket.send(this.autoview.buffer.slice(0, this.autoview.index));
         this.autoview.index = 0;
+        this.sendCount++;
     }
 
 

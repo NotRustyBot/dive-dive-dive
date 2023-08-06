@@ -75,6 +75,7 @@ export class Hitbox extends NetComponent {
     move() {
         this.layer.moveObject(this, this.parent.position.result());
         this.checkCollisions();
+        this.invalidateCache();
     }
 
     checkCollisions() {
@@ -147,6 +148,7 @@ export class Hitbox extends NetComponent {
         this.offset.set(data.x, data.y);
         this.sides.set(data.w, data.h);
         this.layerId = data.layer;
+        this.init();
     }
 
     override init(): void {

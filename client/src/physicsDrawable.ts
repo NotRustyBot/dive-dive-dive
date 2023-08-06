@@ -4,7 +4,7 @@ import { Physics } from "@shared/physics";
 import { ObjectScope } from "@shared/objectScope";
 import { PhysicsDrawable as MockPhysicsDrawable } from "@shared/mock/physicsDrawable";
 import { Sprite, Texture } from "pixi.js";
-import { entityLayer } from "src";
+import { addChildByType, entityLayer } from "src";
 
 
 export class PhysicsDrawable extends MockPhysicsDrawable {
@@ -37,7 +37,7 @@ export class PhysicsDrawable extends MockPhysicsDrawable {
     override init() {
         this.sprite = Sprite.from(this.url);
         this.sprite.anchor.set(0.5);
-        entityLayer.addChild(this.sprite);
+        addChildByType(this.sprite, this.extra);
     }
 
     ["update"](dt: number) {

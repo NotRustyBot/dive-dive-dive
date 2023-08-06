@@ -125,6 +125,7 @@ export class AutoView extends DataView {
         this.uint8Array.set(new Uint8Array(autoView.buffer, autoView.byteOffset, autoView.index), this.index);
         this.index += autoView.index;
     }
+    
     static create(size: number) {
         return new AutoView(new ArrayBuffer(size));
     }
