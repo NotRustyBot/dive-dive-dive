@@ -1,6 +1,6 @@
 #version 300 es
 
-precision mediump float;
+precision highp float;
 in vec2 vTextureCoord;
 
 uniform vec4 inputSize;
@@ -12,6 +12,8 @@ uniform vec2 uCoords;
 uniform float uScale;
 uniform vec2 uCamera;
 uniform float uRange;
+uniform float uSonarQuality;
+uniform float uSonarRange;
 
 const float PI = 3.14159265358979323846264f;
 out vec4 color;
@@ -75,16 +77,32 @@ void main(void) {
     vec2 mul = (outputFrame.zw * inputSize.zw);
     vec2 properCoord = vTextureCoord;
     vec2 worldCoords = (properCoord * outputFrame.zw - outputFrame.zw * 0.5f) / uScale - uCamera;
-    vec4 tex = texture(uSampler, (properCoord) * mul);
-    float dist = (uRange - noise(uTime * 10.f - properCoord.y * 30.f) * 10.f) * uScale;
-    float visibility = 0.75f - min(pow(distance(properCoord * outputFrame.zw, uCoords) / dist, 1.5f), 1.f);
+    vec2 outputCoord = properCoord * mul;
+    vec4 tex = texture(uSampler, outputCoord);
+    float currentRange = (uRange - noise(uTime * 10.f - properCoord.y * 30.f) * 10.f);
+    float dist = distance(properCoord * outputFrame.zw, uCoords) / uScale;
+    float visibility = max(0.75f - min(pow(dist / currentRange, 1.5f), 1.f), 0.f);
 
     float dotNoise = noise(worldCoords * 0.05f) * noise(worldCoords * 0.055f) * noise(vec3(worldCoords * (0.04f), uTime * 0.3f + properCoord.x));
     float dotValue = pow(dotNoise, 3.f);
     float dotPower = 0.5f;
     vec4 dots = vec4(vec3(0) * (1.f - dotPower) + dotPower * vec3(dotValue), 1);
-    //dots.rgb *= visibility;
+    dots.rgb *= visibility;
     tex.rgb = visibility * tex.rgb;
+
+    tex.rgb += visibility * 0.1f;
+
+    vec2 dir = normalize(properCoord - vec2(0.5f));
+    float sonarNoise = noise(vec3(worldCoords * 0.1f, uTime * 3.));
+    vec4 sonarA = texture(uSampler, outputCoord + dir * 0.02f * sonarNoise);
+    vec4 sonarB = texture(uSampler, outputCoord + dir * 0.01f * sonarNoise);
+    float sonarPhase = mod(uTime, 1.f) / 1.f;
+    float propagation = max(0.f, 1.f - abs(sonarPhase - (dist / uSonarRange)));
+    propagation = propagation * max(0.0f, pow(propagation * 1.1f, 10.f));
+    float sonarLevel = max(sonarA.a - sonarB.a, 0.f) * max(0.f, pow(1.f - dist / uSonarRange, 0.2f));
+
+    vec3 sonar = vec3(0.f, sonarLevel * 0.5f, sonarLevel * propagation);
+    tex.rgb += sonar * max(0.f, 1.f - visibility * 2.f) * 0.3f;
     tex.a = 1.f;
 
     color = tex + dots;

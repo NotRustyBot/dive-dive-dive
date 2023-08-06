@@ -17,7 +17,6 @@ export type SerialisedBaseObjectHeader = {
 }
 
 export class BaseObject {
-
     static objectDatagram = new Datagram().append<SerialisedBaseObjectHeader>({
         componentIndex: datatype.uint8,
         id: datatype.uint16,
@@ -27,8 +26,8 @@ export class BaseObject {
         BaseObject.attach(this);
     }
 
-    static attach = (baseobject: BaseObject) => { }
-    static detach = (baseobject: BaseObject) => { }
+    static attach = (baseobject: BaseObject) => {};
+    static detach = (baseobject: BaseObject) => {};
 
     private scopes = new Map<number, number>();
     components = new Map<number, Component>();
@@ -37,11 +36,11 @@ export class BaseObject {
     transform!: Transform;
 
     get position(): Vector {
-        return this.transform.position
+        return this.transform.position;
     }
 
     get rotation(): number {
-        return this.transform.rotation
+        return this.transform.rotation;
     }
 
     public set rotation(v: number) {
@@ -66,10 +65,9 @@ export class BaseObject {
 
     unlinkNetComponent(netComponent: NetComponent) {
         this.netComponents.delete(netComponent.id);
-
     }
 
-    addComponent<T extends Component>(type: { new(parent: BaseObject, index: number): T }) {
+    addComponent<T extends Component>(type: { new (parent: BaseObject, index: number): T }) {
         const component = new type(this, this.componentIndex);
         this.componentIndex++;
         return this.setComponent(component) as T;
@@ -85,12 +83,11 @@ export class BaseObject {
         return this.components.get(id) as T;
     }
 
-    getComponentByType<T extends Component>(type: { new(parent: BaseObject, index: number): T, typeId: number }): T | undefined {
+    getComponentByType<T extends Component>(type: { new (parent: BaseObject, index: number): T; typeId: number }): T | undefined {
         for (const [id, component] of this.components) {
-            if (component.typeId == type.typeId)
-                return component as T
+            if (component.typeId == type.typeId) return component as T;
         }
-        return undefined
+        return undefined;
     }
 
     toSerialisable(scope?: ObjectScope): SerialisedBaseObject {
@@ -135,7 +132,7 @@ export class BaseObject {
 
     applyData(data: SerialisedBaseObject) {
         const dataCache = new Map<number, SerialisedComponent>();
-        const createdComps = new Array<Component>;
+        const createdComps = new Array<Component>();
         for (const componentData of data.componentData) {
             if (!this.getComponent(componentData.id)) {
                 const component = Component.createFromObject(this, componentData);

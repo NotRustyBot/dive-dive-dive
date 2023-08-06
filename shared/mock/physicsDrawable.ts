@@ -7,6 +7,8 @@ import { Physics } from "../physics";
 export type SerialisedPhysicsDrawable = {
     physics: number;
     url: string;
+    extra: number;
+
 }
 
 export type SerialisedPhysicsDrawableComponent = SerialisedPhysicsDrawable & SerialisedComponent;
@@ -14,11 +16,14 @@ export type SerialisedPhysicsDrawableComponent = SerialisedPhysicsDrawable & Ser
 export class PhysicsDrawable extends NetComponent {
     physics!: Physics;
     url!: string;
+    extra!: number;
 
     static override datagramDefinition(): void {
         this.datagram = super.datagram.cloneAppend<SerialisedPhysicsDrawable>({
             physics: commonDatatype.compId,
-            url: datatype.string
+            url: datatype.string,
+            extra: datatype.uint8
+
         });
         this.cacheSize = 2 * 64;
     }
@@ -27,6 +32,7 @@ export class PhysicsDrawable extends NetComponent {
         const data = super.toSerialisable() as SerialisedPhysicsDrawableComponent;
         data.physics = this.physics.id;
         data.url = this.url;
+        data.extra = this.extra;
         return data;
     }
 
@@ -34,6 +40,7 @@ export class PhysicsDrawable extends NetComponent {
         super.fromSerialisable(data);
         this.physics = this.parent.getComponent(data.physics);
         this.url = data.url;
+        this.extra = data.extra;
     }
 }
 

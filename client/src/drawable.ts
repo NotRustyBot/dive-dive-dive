@@ -3,7 +3,7 @@ import { Container, Sprite, Texture } from "pixi.js";
 import { Drawable as MockDrawable } from "@shared/mock/drawable";
 import { BaseObject } from "@shared/baseObject";
 import { ObjectScope } from "@shared/objectScope";
-import { entityLayer } from "src";
+import { addChildByType } from "src";
 
 
 export class Drawable extends MockDrawable {
@@ -22,7 +22,7 @@ export class Drawable extends MockDrawable {
     override init() {
         this.sprite = Sprite.from(this.url);
         this.sprite.anchor.set(0.5);
-        entityLayer.addChild(this.sprite);
+        addChildByType(this.sprite, this.extra);
     }
 
     ["draw"](params?: any) {
@@ -36,4 +36,3 @@ export class Drawable extends MockDrawable {
     }
 
 }
-
