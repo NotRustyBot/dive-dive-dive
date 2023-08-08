@@ -2,7 +2,7 @@ import { Container, Sprite, Texture } from "pixi.js";
 import { Light as MockLight, SerialisedLightComponent } from "@shared/mock/light";
 import { BaseObject } from "@shared/baseObject";
 import { ObjectScope } from "@shared/objectScope";
-import { lightsLayer } from "src";
+import { lightsLayer, time } from "src";
 import { Camera } from "./camera";
 
 export class Light extends MockLight {
@@ -28,9 +28,15 @@ export class Light extends MockLight {
         this.sprite.position.set(this.offset.x, this.offset.y);
     }
 
-    ["draw"](params?: any) {
+    ["draw"](dt: number) {
         const distsq = this.parent.position.distance(Camera.position.result().mult(-1));
-        this.sprite.alpha = (this.range) / distsq;
+        this.sprite.position.set(this.offset.x, this.offset.y);
+        this.sprite.alpha = (this.range * this.intensity) / distsq;
+        if (this.extra == 1) {
+            if (time % 4 > 2) {
+                this.sprite.alpha = 0;
+            }
+        }
         this.sprite.tint = this.tint;
         this.sprite.scale.set(((this.range / 22) * distsq) / 100);
         this.container.position.set(...this.parent.position.xy());

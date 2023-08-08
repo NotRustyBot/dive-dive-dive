@@ -6,6 +6,7 @@ import { Vector, Vectorlike } from "../types";
 import { Drawable } from "./drawable";
 
 export type SerialisedLight = {
+    intensity: number;
     range: number;
     tint: number;
     extra: number;
@@ -15,6 +16,7 @@ export type SerialisedLight = {
 export type SerialisedLightComponent = SerialisedLight & SerialisedComponent;
 
 export class Light extends NetComponent {
+    intensity = 1;
     range = 50;
     tint = 0xffffff;
     extra = 0;
@@ -24,6 +26,7 @@ export class Light extends NetComponent {
         super.datagramDefinition();
         this.datagram = this.datagram.cloneAppend<SerialisedLight>({
             range: datatype.float32,
+            intensity: datatype.float32,
             tint: datatype.uint32,
             extra: datatype.uint8,
             offset: datatype.vector32
@@ -41,6 +44,7 @@ export class Light extends NetComponent {
         data.tint = this.tint;
         data.range = this.range;
         data.offset = this.offset;
+        data.intensity = this.intensity;
         return data;
     }
 
@@ -48,6 +52,7 @@ export class Light extends NetComponent {
         this.extra = data.extra;
         this.tint = data.tint;
         this.range = data.range;
+        this.intensity = data.intensity;
         this.offset = Vector.fromLike(data.offset);
         super.fromSerialisable(data);
     }
