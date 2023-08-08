@@ -161,3 +161,28 @@ registerFactory("fish", (v) => {
     ObjectScope.network.scopeObject(fish);
     return fish;
 });
+
+registerFactory("beacon", (v) => {
+    const image = ObjectScope.game.createObject();
+    const transform = image.addComponent(Transform);
+    const drawable = image.addComponent(Drawable);
+    const sync = image.addComponent(Sync);
+    const glow = image.addComponent(Light);
+    const detectable = image.addComponent(RangeDetectable);
+    drawable.url = "/assets/beacon.png";
+    drawable.extra = drawableExtra.background;
+    transform.position.set(v.x, v.y);
+    transform.init();
+    glow.offset.y = -45;
+    glow.range = 100;
+    glow.intensity = 3;
+    glow.extra = 1;
+    glow.tint = 0xff8888;
+    sync.authorize([transform, drawable]);
+    drawable.init();
+    sync.init();
+    glow.init();
+    detectable.init();
+    ObjectScope.network.scopeObject(image);
+    return image;
+});
