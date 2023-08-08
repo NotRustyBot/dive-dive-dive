@@ -1,7 +1,7 @@
 import { BaseObject } from "../baseObject";
 import { SerialisedComponent } from "../component";
 import { datatype } from "../datagram";
-import { NetComponent, commonDatatype } from "../netComponent";
+import { NetComponent } from "../netComponent";
 import { Vector, Vectorlike } from "../types";
 import { Drawable } from "./drawable";
 

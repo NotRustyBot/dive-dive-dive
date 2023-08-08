@@ -1,6 +1,7 @@
 import { BaseObject } from "./baseObject";
-import { SerialisedComponent, NetComponent } from "./netComponent";
+import {  NetComponent } from "./netComponent";
 import { datatype } from "./datagram";
+import { SerialisedComponent } from "./component";
 
 export type SerialisedServerInfo = {
     playerCount: number;

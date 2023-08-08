@@ -1,15 +1,14 @@
 import { AutoView } from "@shared/datagram";
 import { Connector } from "./connector";
-import { DynamicHitbox, Hitbox, Message, NetManager, ObjectScope, Physics, PhysicsDrawable, ServerInfo, SubControl, SubmarineBehaviour, Sync, Transform } from "./registry";
+import { Assemblies, BeaconDeployerPart, DynamicHitbox, Hitbox, Message, NetManager, ObjectScope, Physics, PhysicsDrawable, ServerInfo, SubControl, SubmarineBehaviour, Sync, Transform } from "./registry";
 import { Layer } from "@shared/physics/chunks";
 import { headerId } from "@shared/netManager";
 import { Vector } from "@shared/types";
 import { startDevServer } from "./devserver";
 import { serverMode } from "@shared/serverInfo";
 import { messageType } from "@shared/messages";
-import { initCommon, submarineLayer, terrainLayer } from "@shared/common";
+import { SubmarinePart, initCommon, partTypes, submarineLayer, terrainLayer } from "@shared/common";
 import { Detector } from "./server/detector";
-import { Detectable } from "./server/detectable";
 import { RangeDetector } from "./server/rangeDetector";
 import { RangeDetectable } from "./server/rangeDetectable";
 import { Client } from "./client";
@@ -58,11 +57,24 @@ export function createSubmarine(client: Client) {
     const transform = sub.addComponent(Transform);
     const detector = sub.addComponent(RangeDetector);
     const detectable = sub.addComponent(RangeDetectable);
+    const assemblies = sub.addComponent(Assemblies);
+    const beaconDeployer = sub.addComponent(BeaconDeployerPart);
+    beaconDeployer.submarine = submarine;
+    beaconDeployer.count = 1;
     control.submarine = submarine;
     submarine.physics = physics;
     submarine.owner = client.id;
     drawable.physics = physics;
     submarine.hitbox = hitbox;
+    assemblies.assemblies = [
+        { part: SubmarinePart.get(partTypes.smallHovHull), count: 1 },
+        { part: SubmarinePart.get(partTypes.ballast), count: 16 },
+        { part: SubmarinePart.get(partTypes.basicEngine), count: 1 },
+        { part: SubmarinePart.get(partTypes.basicPump), count: 1 },
+        { part: SubmarinePart.get(partTypes.battery), count: 5 },
+        { part: SubmarinePart.get(partTypes.beaconDeployer), count: 1 },
+    ];
+    assemblies.submarine = submarine;
     hitbox.sides = new Vector(250, 100);
     drawable.url = "/assets/brandy.png";
     drawable.extra = drawableExtra.entity;
@@ -79,9 +91,12 @@ export function createSubmarine(client: Client) {
     net.init();
     submarine.init();
     detector.init();
+    assemblies.init();
     detectable.init();
+    beaconDeployer.init();
     ObjectScope.network.scopeObject(sub);
     clientSubs.set(client.id, submarine);
+    console.log(submarine.stats);
 
     return sub;
 }

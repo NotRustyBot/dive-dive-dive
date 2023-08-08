@@ -1,8 +1,9 @@
-import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
 import { Area, Layer, RectWithParent } from "./physics/chunks";
 import { Vector, Vectorlike } from "./types";
 import { BaseObject } from "./baseObject";
 import { Datagram, datatype } from "./datagram";
+import { NetComponent } from "./netComponent";
+import { SerialisedComponent } from "./component";
 
 export type SerialisedHitbox = {
     x: number;

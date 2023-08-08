@@ -10,6 +10,8 @@ import { Sync } from "@shared/sync"
 import { Light } from "./light"
 import { ServerInfo } from "@shared/serverInfo"
 import { FishBehaviour } from "@shared/fish"
+import { Assemblies } from "@shared/submarineAssemblies"
+import { BeaconDeployerPart } from "./parts/beaconDeployer"
 
 
 export function initModules(){
@@ -25,4 +27,6 @@ export function initModules(){
     Sync.initialise();
     Light.initialise();
     FishBehaviour.initialise();
+    Assemblies.initialise();
+    BeaconDeployerPart.initialise();
 }

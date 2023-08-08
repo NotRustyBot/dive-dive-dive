@@ -1,8 +1,8 @@
 import { BaseObject } from "./baseObject";
-import { SerialisedComponent } from "./component";
+import { SerialisedComponent, commonDatatype } from "./component";
 import { datatype } from "./datagram";
 import { Hitbox } from "./hitbox";
-import { NetComponent, commonDatatype } from "./netComponent";
+import { NetComponent } from "./netComponent";
 import { ObjectScope } from "./objectScope";
 import { Physics } from "./physics";
 import { Vector, Vectorlike } from "./types";
