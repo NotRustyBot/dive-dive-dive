@@ -1,18 +1,17 @@
 import { BaseObject } from "@shared/baseObject";
-import { SerialisedComponent } from "@shared/component";
 import { Detector, SerialisedDetectorComponent } from "./detector";
 import { physicsLayerEnum, physicsLayers } from "../main";
 import { RangeDetectable } from "./rangeDetectable";
-
+import { Vector, Vectorlike } from "@shared/types";
 
 export type SerialisedRangeDetector = {
-    range: number;
-}
+    range: Vectorlike;
+};
 
 export type SerialisedRangeDetectorComponent = SerialisedRangeDetector & SerialisedDetectorComponent;
 
 export class RangeDetector extends Detector {
-    range = 1000;
+    range = { x: 1000, y: 1000 };
 
     constructor(parent: BaseObject, id: number) {
         super(parent, id);
@@ -23,7 +22,7 @@ export class RangeDetector extends Detector {
 
         for (const area of areas) {
             for (const rect of area) {
-                const detectable = RangeDetectable.getByParent(rect.parent)
+                const detectable = RangeDetectable.getByParent(rect.parent);
                 if (detectable) this.detected(detectable);
             }
         }

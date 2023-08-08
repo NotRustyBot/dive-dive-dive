@@ -1,112 +1,117 @@
 import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
-import { Area, Layer, RectInAreas } from "./physics/chunks";
+import { Area, Layer, RectWithParent } from "./physics/chunks";
 import { Vector, Vectorlike } from "./types";
 import { BaseObject } from "./baseObject";
-import { datatype } from "./datagram";
-
+import { Datagram, datatype } from "./datagram";
 
 export type SerialisedHitbox = {
     x: number;
     y: number;
     w: number;
     h: number;
-    layer: number;
+    peek: Array<{ id: number }>;
+    poke: Array<{ id: number }>;
 };
 export type SerialisedHitboxComponent = SerialisedHitbox & SerialisedComponent;
 
 export type Overlap = {
     offset: Vectorlike;
-    with: RectInAreas;
-}
+    with: RectWithParent;
+};
 
 export class Hitbox extends NetComponent {
-    inAreas = new Set<Area>();
     boundOffsets: Array<Vectorlike> = [];
     size = 0;
-    layer!: Layer;
     sides = new Vector();
     offset = new Vector();
-    overlaps: Array<Overlap> = [];
+    overlaps = new Map<Layer, Array<Overlap>>();
     position = new Vector();
-    layerId!: number;
+
+    peek: Array<Layer> = [];
+    poke: Array<Layer> = [];
+
+    pokeAreas = new Set<Area>();
 
     public get x1(): number {
-        return this.position.x + this.offset.x - this.sides.x / 2
+        return this.position.x + this.offset.x - this.sides.x / 2;
     }
 
     public get x2(): number {
-        return this.position.x + this.offset.x + this.sides.x / 2
+        return this.position.x + this.offset.x + this.sides.x / 2;
     }
 
     public get y1(): number {
-        return this.position.y + this.offset.y - this.sides.y / 2
+        return this.position.y + this.offset.y - this.sides.y / 2;
     }
 
     public get y2(): number {
-        return this.position.y + this.offset.y + this.sides.y / 2
+        return this.position.y + this.offset.y + this.sides.y / 2;
     }
 
     static override datagramDefinition(): void {
         this.datagram = this.datagram.cloneAppend<SerialisedHitbox>({
-            layer: datatype.uint8,
             x: datatype.float32,
             y: datatype.float32,
             w: datatype.float32,
             h: datatype.float32,
+            peek: [datatype.array, new Datagram().addField("id", datatype.uint8)],
+            poke: [datatype.array, new Datagram().addField("id", datatype.uint8)],
         });
+
+        this.cacheSize = 32;
     }
-
-
 
     constructor(parent: BaseObject, id: number) {
         super(parent, id);
     }
 
     override onRemove(): void {
-        this.layer.removeObject(this);
-    }
-
-    setLayer(layer: Layer) {
-        this.layer = layer;
-        this.layer.addObject(this);
-        this.invalidateCache();
+        for (const layer of this.poke) {
+            layer.removeObject(this, this.pokeAreas);
+        }
     }
 
     move() {
-        this.layer.moveObject(this, this.parent.position.result());
+        for (const layer of this.poke) {
+            layer.moveObject(this, this.parent.position.result(), this.pokeAreas);
+        }
+        this.position.set(this.parent.position.x, this.parent.position.y);
         this.checkCollisions();
         this.invalidateCache();
     }
 
     checkCollisions() {
-        this.overlaps = [];
-        const toCheck = new Set<RectInAreas>();
-        for (const area of this.inAreas) {
-            for (const box of area.members) {
-                if (box == this) continue;
-                toCheck.add(box);
+        for (const layer of this.peek) {
+            //#perf???
+            this.overlaps.set(layer, []);
+            const areas = layer.getRelevantObjects(this);
+            const toCheck = new Set<RectWithParent>();
+            for (const members of areas) {
+                for (const box of members) {
+                    if (box == this) continue;
+                    toCheck.add(box);
+                }
             }
-        }
 
-        for (const box of toCheck) {
-            this.checkAgainst(box);
+            for (const box of toCheck) {
+                this.checkAgainst(box, layer);
+            }
         }
     }
 
-    checkAgainst(that: RectInAreas) {
+    checkAgainst(that: RectWithParent, layer: Layer) {
         const small_epsilon = 0;
-        if (this.x1 < that.x2 && this.x2 > that.x1 &&
-            this.y1 < that.y2 && this.y2 > that.y1) {
+        if (this.x1 < that.x2 && this.x2 > that.x1 && this.y1 < that.y2 && this.y2 > that.y1) {
             const dx = Math.min(this.x2, that.x2) - Math.max(this.x1, that.x1);
             const dy = Math.min(this.y2, that.y2) - Math.max(this.y1, that.y1);
             const offset = new Vector();
-            offset.x = (dx > 0) ? (dx + small_epsilon) : 0;
-            offset.y = (dy > 0) ? (dy + small_epsilon) : 0;
+            offset.x = dx > 0 ? dx + small_epsilon : 0;
+            offset.y = dy > 0 ? dy + small_epsilon : 0;
 
-            offset.x *= (this.x2 < that.x2) ? -1 : 1;
-            offset.y *= (this.y2 < that.y2) ? -1 : 1;
+            offset.x *= this.x2 < that.x2 ? -1 : 1;
+            offset.y *= this.y2 < that.y2 ? -1 : 1;
 
-            this.overlaps.push({ offset, with: that });
+            this.overlaps.get(layer).push({ offset, with: that });
         }
     }
 
@@ -115,7 +120,7 @@ export class Hitbox extends NetComponent {
         if (this.x2 / 2 < coord.x) return false;
         if (this.y1 / 2 > coord.y) return false;
         if (this.y2 / 2 < coord.y) return false;
-        return true
+        return true;
     }
 
     updateBounds() {
@@ -139,7 +144,8 @@ export class Hitbox extends NetComponent {
         data.y = this.offset.y;
         data.w = this.sides.x;
         data.h = this.sides.y;
-        data.layer = this.layer.id;
+        data.peek = this.peek;
+        data.poke = this.poke;
         return data;
     }
 
@@ -147,15 +153,23 @@ export class Hitbox extends NetComponent {
         super.fromSerialisable(data);
         this.offset.set(data.x, data.y);
         this.sides.set(data.w, data.h);
-        this.layerId = data.layer;
+        this.peek = data.peek.map((o) => Layer.getById(o.id));
+        this.poke = data.poke.map((o) => Layer.getById(o.id));
         this.init();
     }
 
     override init(): void {
-        this.position = this.parent.position.result();  
+        this.position = this.parent.position.result();
+
+        for (const layer of this.peek) {
+            this.overlaps.set(layer, []);
+        }
+
+        for (const layer of this.poke) {
+            layer.addObject(this, this.pokeAreas);
+        }
+
         this.updateBounds();
-        this.setLayer(Layer.getById(this.layerId));
         this.move();
     }
 }
-

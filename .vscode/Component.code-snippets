@@ -15,7 +15,7 @@
             "",
             "export type Serialised$1Component = Serialised$1 & SerialisedComponent;",
             "",
-            "export class $1 extends Component {",
+            "export class $1 extends NetComponent {",
             "",
             "    static override datagramDefinition(): void {",
             "        super.datagramDefinition();",

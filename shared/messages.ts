@@ -30,7 +30,7 @@ type debugCamMessage = {
 type debugCamPositionMessage = {
     typeId: messageType.debugCamPosition
     position: Vector,
-    range: number
+    range: Vector
 }
 
 
@@ -55,7 +55,7 @@ export class Message {
         [messageType.debugCamPosition]: new Datagram().append<debugCamPositionMessage>({
             typeId: messageIdDataType,
             position: datatype.vector32,
-            range: datatype.float32
+            range: datatype.vector32
         }),
     };
     static write<T extends netMessage>(view: AutoView, data: T) {

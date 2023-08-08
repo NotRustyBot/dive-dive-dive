@@ -1,16 +1,17 @@
-import express from 'express';
-import fs from 'fs';
-import cors from 'cors';
-import { Drawable, Hitbox, ObjectScope, Sync, Transform } from './registry';
-import fileUpload from 'express-fileupload';
-import { clearAll, connector } from './main';
-import { ServerInfo, serverMode } from '@shared/serverInfo';
-import { BaseObject } from '@shared/baseObject';
-import { Vector, Vectorlike } from '@shared/types';
-import { Detectable } from './server/detectable';
-import { RangeDetectable } from './server/rangeDetectable';
-import { Detector } from './server/detector';
-import { drawableExtra } from '@shared/mock/drawable';
+import express from "express";
+import fs from "fs";
+import cors from "cors";
+import { Drawable, DynamicHitbox, FishBehaviour, Hitbox, Light, ObjectScope, Physics, PhysicsDrawable, Sync, Transform } from "./registry";
+import fileUpload from "express-fileupload";
+import { clearAll, connector } from "./main";
+import { ServerInfo, serverMode } from "@shared/serverInfo";
+import { BaseObject } from "@shared/baseObject";
+import { Vector, Vectorlike } from "@shared/types";
+import { Detectable } from "./server/detectable";
+import { RangeDetectable } from "./server/rangeDetectable";
+import { Detector } from "./server/detector";
+import { drawableExtra } from "@shared/mock/drawable";
+import { submarineLayer, terrainLayer } from "@shared/common";
 
 export function startDevServer() {
     const assetsPath = "../client/static/assets/";
@@ -19,13 +20,13 @@ export function startDevServer() {
     app.use(fileUpload());
     app.use(cors());
 
-    app.get('/dev/save', function (req, res) {
+    app.get("/dev/save", function (req, res) {
         const data = ObjectScope.network.toDeepSerialisable();
         fs.writeFileSync("persistent.json", JSON.stringify(data));
         res.send("OK");
     });
 
-    app.post('/dev/upload', function (req, res) {
+    app.post("/dev/upload", function (req, res) {
         console.log("processing upload");
 
         for (const filename in req.files) {
@@ -36,13 +37,13 @@ export function startDevServer() {
                 } else {
                     console.log("adding " + file.name);
                 }
-                fs.writeFile(assetsPath + file.name, file.data, () => { });
+                fs.writeFile(assetsPath + file.name, file.data, () => {});
             }
         }
         res.send();
     });
 
-    app.get('/dev/load', function (req, res) {
+    app.get("/dev/load", function (req, res) {
         const data = JSON.parse(fs.readFileSync("persistent.json", "utf8"));
         clearAll();
         ObjectScope.network = ObjectScope.fromSerialisable(data);
@@ -52,38 +53,37 @@ export function startDevServer() {
         res.send("OK");
     });
 
-    app.get('/dev/tick', function (req, res) {
+    app.get("/dev/tick", function (req, res) {
         ServerInfo.get().tick = 1;
         res.send("OK");
     });
 
-    app.get('/dev/factories', function (req, res) {
+    app.get("/dev/factories", function (req, res) {
         res.send(JSON.stringify([...factories.keys()]));
     });
 
-    app.get('/dev/spawn/:name/:x/:y', function (req, res) {
+    app.get("/dev/spawn/:name/:x/:y", function (req, res) {
         const factory = factories.get(req.params.name);
         factory({ x: parseFloat(req.params.x), y: parseFloat(req.params.y) });
         res.send("OK");
     });
 
-    app.get('/dev/pause', function (req, res) {
+    app.get("/dev/pause", function (req, res) {
         ServerInfo.get().mode = serverMode.pause;
         res.send("OK");
     });
 
-    app.get('/dev/play', function (req, res) {
+    app.get("/dev/play", function (req, res) {
         ServerInfo.get().mode = serverMode.update;
         res.send("OK");
     });
 
-    app.listen(3001)
+    app.listen(3001);
 
     console.log("dev server listening");
-
 }
 
-type factory = (position: Vectorlike) => BaseObject
+type factory = (position: Vectorlike) => BaseObject;
 
 const factories = new Map<string, factory>();
 
@@ -101,9 +101,10 @@ registerFactory("terrain", (v) => {
     hitbox.sides = new Vector(220, 220);
     drawable.url = "/assets/terrain.png";
     drawable.extra = drawableExtra.terrain;
-    hitbox.layerId = 0;
+    hitbox.poke = [terrainLayer];
     transform.position.set(v.x, v.y);
     sync.authorize([transform]);
+    transform.init();
     drawable.init();
     hitbox.init();
     sync.init();
@@ -119,12 +120,44 @@ registerFactory("image", (v) => {
     const sync = image.addComponent(Sync);
     const detectable = image.addComponent(RangeDetectable);
     drawable.url = "/assets/red.png";
-    drawable.extra = drawableExtra.background
+    drawable.extra = drawableExtra.background;
     transform.position.set(v.x, v.y);
+    transform.init();
     sync.authorize([transform, drawable]);
     drawable.init();
     sync.init();
     detectable.init();
     ObjectScope.network.scopeObject(image);
     return image;
+});
+
+registerFactory("fish", (v) => {
+    const fish = ObjectScope.game.createObject();
+    const transform = fish.addComponent(Transform);
+    const drawable = fish.addComponent(PhysicsDrawable);
+    const glow = fish.addComponent(Light);
+    const sync = fish.addComponent(Sync);
+    const physics = fish.addComponent(Physics);
+    const behaviour = fish.addComponent(FishBehaviour);
+    const detectable = fish.addComponent(RangeDetectable);
+    const hitbox = fish.addComponent(DynamicHitbox);
+    behaviour.physics = physics;
+    hitbox.sides = new Vector(22, 22);
+    hitbox.peek = [submarineLayer, terrainLayer];
+    behaviour.hitbox = hitbox;
+    drawable.url = "/assets/fish.png";
+    drawable.physics = physics;
+    drawable.extra = drawableExtra.background;
+    transform.position.set(v.x, v.y);
+    sync.authorize([transform, drawable, behaviour, physics]);
+    transform.init();
+    drawable.init();
+    sync.init();
+    behaviour.init();
+    physics.init();
+    hitbox.init();
+    detectable.init();
+    glow.init();
+    ObjectScope.network.scopeObject(fish);
+    return fish;
 });

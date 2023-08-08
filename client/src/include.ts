@@ -7,7 +7,9 @@ import { PhysicsDrawable } from "./physicsDrawable"
 import { SubmarineBehaviour } from "../../shared/submarine"
 import { Transform } from "../../shared/transform"
 import { Sync } from "@shared/sync"
+import { Light } from "./light"
 import { ServerInfo } from "@shared/serverInfo"
+import { FishBehaviour } from "@shared/fish"
 
 
 export function initModules(){
@@ -21,5 +23,6 @@ export function initModules(){
     SubmarineBehaviour.initialise();
     Transform.initialise();
     Sync.initialise();
-    
+    Light.initialise();
+    FishBehaviour.initialise();
 }

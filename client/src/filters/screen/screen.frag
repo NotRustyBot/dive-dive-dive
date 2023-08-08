@@ -93,11 +93,11 @@ void main(void) {
     tex.rgb += visibility * 0.1f;
 
     vec2 dir = normalize(properCoord - vec2(0.5f));
-    float sonarNoise = noise(vec3(worldCoords * 0.1f, uTime * 3.));
-    vec4 sonarA = texture(uSampler, outputCoord + dir * 0.02f * sonarNoise);
-    vec4 sonarB = texture(uSampler, outputCoord + dir * 0.01f * sonarNoise);
+    float sonarNoise = noise(vec3(worldCoords * 0.1f, uTime * 3.f));
+    vec4 sonarA = texture(uSampler, outputCoord + dir * 0.08f * uScale * sonarNoise);
+    vec4 sonarB = texture(uSampler, outputCoord + dir * 0.04f * uScale * sonarNoise);
     float sonarPhase = mod(uTime, 1.f) / 1.f;
-    float propagation = max(0.f, 1.f - abs(sonarPhase - (dist / uSonarRange)));
+    float propagation = max(0.f, 1.f - abs((dist / uSonarRange) - sonarPhase));
     propagation = propagation * max(0.0f, pow(propagation * 1.1f, 10.f));
     float sonarLevel = max(sonarA.a - sonarB.a, 0.f) * max(0.f, pow(1.f - dist / uSonarRange, 0.2f));
 

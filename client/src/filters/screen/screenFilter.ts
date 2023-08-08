@@ -19,7 +19,6 @@ export class ScreenFilter extends Filter {
         this.uniforms.uCamera = [Camera.position.x, Camera.position.y];
         this.uniforms.uRange = 1000;
         this.uniforms.uSonarRange = 2000;
-        this.uniforms.uSonarQuality = 20;
         this.uniforms.uScale = Camera.scale;
         filterManager.applyFilter(this, input, output, clear);
     }

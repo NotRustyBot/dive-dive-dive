@@ -12,12 +12,15 @@ import { Vector } from "@shared/types";
 import { keys } from "./control";
 import { messageType } from "@shared/messages";
 import { drawableExtra } from "@shared/mock/drawable";
+import { initCommon } from "@shared/common";
 import { TerrainFilter } from "./filters/terrain/terrainFilter";
 
 const game = ObjectScope.game;
+
+initCommon();
+
 export const app = new PIXI.Application<HTMLCanvasElement>({ backgroundColor: "#112244" });
 export let currentSubmarine: SubmarineBehaviour;
-const terrainPhysicsLayer = new Layer();
 
 export let time = 0;
 
@@ -25,27 +28,33 @@ document.body.insertBefore(app.view, document.body.firstChild);
 function resize() {
     app.renderer.resize(window.innerWidth, window.innerHeight);
     app.stage.position.set(window.innerWidth / 2, window.innerHeight / 2);
-    realLayer.filterArea.x = Math.floor(0);
-    realLayer.filterArea.y = Math.floor(0);
-    realLayer.filterArea.width = Math.floor(window.innerWidth);
-    realLayer.filterArea.height = Math.floor(window.innerHeight);
+    worldLayer.filterArea.x = Math.floor(0);
+    worldLayer.filterArea.y = Math.floor(0);
+    worldLayer.filterArea.width = Math.floor(window.innerWidth);
+    worldLayer.filterArea.height = Math.floor(window.innerHeight);
 
     Camera.size.x = window.innerWidth;
     Camera.size.y = window.innerHeight;
 }
 
+export const worldLayer = new PIXI.Container();
 export const realLayer = new PIXI.Container();
 export const backgroundLayer = new PIXI.Container();
 export const terrainLayer = new PIXI.Container();
 export const entityLayer = new PIXI.Container();
+export const lightsLayer = new PIXI.Container();
 realLayer.addChild(backgroundLayer);
 realLayer.addChild(terrainLayer);
 realLayer.addChild(entityLayer);
+worldLayer.addChild(realLayer);
+worldLayer.addChild(lightsLayer);
 
-app.stage.addChild(realLayer);
+app.stage.addChild(worldLayer);
 window.onresize = resize;
-realLayer.filterArea = new PIXI.Rectangle();
+worldLayer.filterArea = new PIXI.Rectangle();
+realLayer.filterArea = worldLayer.filterArea;
 terrainLayer.filterArea = realLayer.filterArea;
+lightsLayer.filterArea = realLayer.filterArea;
 realLayer.filters = [new ScreenFilter()];
 terrainLayer.filters = [new TerrainFilter()];
 resize();
@@ -118,12 +127,12 @@ app.ticker.add((dt) => {
         Network.message({
             position: Camera.position.result().mult(-1),
             typeId: messageType.debugCamPosition,
-            range: Camera.size.x / Camera.scale,
+            range: new Vector(Camera.size.x / Camera.scale, Camera.size.y / Camera.scale),
         });
     }
 
-    realLayer.scale.set(Camera.scale);
-    realLayer.position.set(Camera.position.x * Camera.scale, Camera.position.y * Camera.scale);
+    worldLayer.scale.set(Camera.scale);
+    worldLayer.position.set(Camera.position.x * Camera.scale, Camera.position.y * Camera.scale);
     game.fire("draw", dt);
     Network.sendMessages();
     Network.sendObjects();
@@ -135,7 +144,7 @@ document.addEventListener("contextmenu", (e) => {
 
 export function addChildByType(child: PIXI.Container, type: number) {
     switch (type) {
-        case drawableExtra.background: 
+        case drawableExtra.background:
             backgroundLayer.addChild(child);
             break;
 
@@ -145,6 +154,10 @@ export function addChildByType(child: PIXI.Container, type: number) {
 
         case drawableExtra.entity:
             entityLayer.addChild(child);
+            break;
+
+        case drawableExtra.lights:
+            lightsLayer.addChild(child);
             break;
 
         default:
