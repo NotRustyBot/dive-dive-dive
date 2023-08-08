@@ -1,9 +1,10 @@
 
 import { BaseObject } from "./baseObject";
-import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
 import { Vector } from "./types";
 import { Template, datatype } from "./datagram";
 import { ObjectScope } from "./objectScope";
+import { SerialisedComponent } from "./component";
+import { NetComponent } from "./netComponent";
 
 export type SerialisedPhysics = {
     x: number,

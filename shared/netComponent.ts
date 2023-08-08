@@ -2,24 +2,7 @@ import { AutoView, Datagram, Template, datatype } from "./datagram";
 import { BaseObject } from "./baseObject";
 import { bbid } from "./bbid";
 import { Vectorlike } from "./types";
-import { Component } from "./component";
-
-export type Serialisable = {
-    [k: string]: SerialisableValue
-}
-
-export type SerialisableValue = number | string | Vectorlike | Array<number> | Array<string> | Array<Serialisable>;
-
-export interface SerialisedComponent extends Serialisable {
-    typeId: number,
-    id: number,
-}
-
-export const commonDatatype = {
-    typeId: datatype.uint16,
-    compId: datatype.uint8,
-    objectId: datatype.uint16,
-}
+import { Component, SerialisedComponent } from "./component";
 
 export class NetComponent extends Component {
 

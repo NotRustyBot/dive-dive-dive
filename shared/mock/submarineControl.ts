@@ -1,6 +1,7 @@
 import { BaseObject } from "../baseObject";
-import { NetComponent, SerialisedComponent, commonDatatype } from "../netComponent";
+import { SerialisedComponent, commonDatatype } from "../component";
 import { datatype } from "../datagram";
+import { NetComponent } from "../netComponent";
 import { ObjectScope } from "../objectScope";
 import { SubmarineBehaviour } from "../submarine";
 import { Vectorlike, Vector } from "../types";

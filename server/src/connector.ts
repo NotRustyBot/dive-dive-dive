@@ -1,12 +1,13 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/netManager";
 import { AutoView } from "@shared/datagram";
-import { Message, ObjectScope, ServerInfo, Sync, Transform } from "./registry";
+import { Message, ObjectScope, ServerInfo, SubmarineBehaviour, Sync, Transform } from "./registry";
 import { Client } from "./client";
 import { createSubmarine } from "./main";
 import { Detector } from "./server/detector";
 import { messageType, netMessage } from "@shared/messages";
 import { RangeDetector } from "./server/rangeDetector";
+import { partActions } from "@shared/common";
 
 export class Connector {
     clients = new Map<WebSocket, Client>();
@@ -111,6 +112,17 @@ export class Connector {
                     const rangeDetector = client.debugCam.getComponentByType(RangeDetector);
                     rangeDetector.range = msg.range.mult(0.5);
                     client.debugCam.position.set(msg.position.x, msg.position.y);
+                }
+                break;
+
+            case messageType.partActivity:
+                {
+                    const object = ObjectScope.network.getObject(msg.objectId);
+                    const subBehaviour = object.getComponentByType(SubmarineBehaviour);
+                    if(subBehaviour.owner == client.id){
+                        if(msg.action == partActions.deployBeacon)
+                        subBehaviour.commands.fire("deploy-beacon");
+                    }
                 }
                 break;
         }

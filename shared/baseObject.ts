@@ -1,9 +1,9 @@
 import { AutoView, Datagram, datatype } from "./datagram";
-import { NetComponent, Serialisable, SerialisedComponent } from "./netComponent";
 import { ObjectScope } from "./objectScope";
 import { Vector } from "./types";
 import { Transform } from "./transform";
-import { Component } from "./component";
+import { Component, Serialisable, SerialisedComponent } from "./component";
+import { NetComponent } from "./netComponent";
 
 export type SerialisedBaseObject = {
     id: number,

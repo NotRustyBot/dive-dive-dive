@@ -1,7 +1,8 @@
 import { datatype } from "../datagram";
 import { BaseObject } from "../baseObject";
-import { NetComponent, Serialisable, SerialisedComponent, commonDatatype } from "../netComponent";
 import { Physics } from "../physics";
+import { SerialisedComponent, commonDatatype } from "../component";
+import { NetComponent } from "../netComponent";
 
 
 export type SerialisedPhysicsDrawable = {

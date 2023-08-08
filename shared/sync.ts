@@ -1,8 +1,9 @@
 import { NetManager as SyncManager } from "./netManager";
 import { BaseObject, SerialisedBaseObject } from "./baseObject";
-import { NetComponent, SerialisedComponent, commonDatatype } from "./netComponent";
 import { AutoView, Datagram, datatype } from "./datagram";
 import { ObjectScope } from "./objectScope";
+import { SerialisedComponent, commonDatatype } from "./component";
+import { NetComponent } from "./netComponent";
 
 export type ComponentAuthority = {
     authority: number,

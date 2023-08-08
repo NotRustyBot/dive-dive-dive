@@ -1,6 +1,7 @@
 import { BaseObject } from "../baseObject";
-import { NetComponent, Serialisable, SerialisedComponent } from "../netComponent";
+import { NetComponent } from "../netComponent";
 import { datatype } from "../datagram";
+import { SerialisedComponent } from "../component";
 
 export enum drawableExtra {
     background = 0,
@@ -11,21 +12,20 @@ export enum drawableExtra {
 
 export type SerialisedDrawable = {
     url: string;
-    extra: number
-}
+    extra: number;
+};
 
 export type SerialisedDrawableComponent = SerialisedDrawable & SerialisedComponent;
 
 export class Drawable extends NetComponent {
     url!: string;
     extra!: number;
-    
-    
+
     static override datagramDefinition(): void {
         this.datagram = super.datagram.cloneAppend<SerialisedDrawable>({
             url: datatype.string,
-            extra: datatype.uint8
-        });        
+            extra: datatype.uint8,
+        });
         this.cacheSize = 2 * 64 + 1;
     }
 

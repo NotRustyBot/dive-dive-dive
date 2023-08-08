@@ -1,5 +1,5 @@
-import { NetComponent, Serialisable } from "./netComponent";
 import { BaseObject, SerialisedBaseObject } from "./baseObject";
+import { Serialisable } from "./component";
 import { IncidentRotuer, trippable } from "./incident";
 
 

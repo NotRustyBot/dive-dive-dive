@@ -1,7 +1,6 @@
 import { SubControl as MockSubControl, SerialisedSubControlComponent } from "@shared/mock/submarineControl";
 import { Vectorlike } from "@shared/types";
 import { keys } from "./control";
-import { Network } from "./network";
 import { NetManager } from "@shared/netManager";
 import { Camera } from "./camera";
 
@@ -26,6 +25,8 @@ export class SubControl extends MockSubControl {
         if (keys["w"]) this.vector.y = -1;
         if (keys["s"]) this.vector.y = 1;
         this.submarine.control.set(this.vector.x, this.vector.y);
+        
+        if (keys["k"] == 1) this.submarine.commands.fire("deploy-beacon");
         this.invalidateCache();
     }
 }
