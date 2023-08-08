@@ -1,5 +1,5 @@
 import { WebSocket, WebSocketServer } from "ws";
-import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/netManager"
+import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/netManager";
 import { AutoView } from "@shared/datagram";
 import { Message, ObjectScope, ServerInfo, Sync, Transform } from "./registry";
 import { Client } from "./client";
@@ -7,7 +7,6 @@ import { createSubmarine } from "./main";
 import { Detector } from "./server/detector";
 import { messageType, netMessage } from "@shared/messages";
 import { RangeDetector } from "./server/rangeDetector";
-
 
 export class Connector {
     clients = new Map<WebSocket, Client>();
@@ -27,16 +26,13 @@ export class Connector {
     start() {
         console.log("listening ...");
 
-        this.websocket.on('connection', (clientSocket) => {
+        this.websocket.on("connection", (clientSocket) => {
             try {
                 clientSocket.addListener("message", (message: Buffer) => {
-                    let receiveBuffer = message.buffer.slice(
-                        message.byteOffset,
-                        message.byteOffset + message.byteLength
-                    );
+                    let receiveBuffer = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
                     const autoview = new AutoView(receiveBuffer);
                     while (autoview.index < receiveBuffer.byteLength) {
-                        const type = autoview.readUint16()
+                        const type = autoview.readUint16();
                         switch (type) {
                             case headerId.handshake:
                                 const out = NetManager.connectRequest.deserealise<HandshakeRequest>(autoview);
@@ -49,7 +45,7 @@ export class Connector {
                                         response = "i don't think that's you";
                                         out.clientId = this.knownClients.size + 1;
                                     } else {
-                                        response = "welcome back"
+                                        response = "welcome back";
                                     }
                                 } else {
                                     out.clientId = this.knownClients.size + 1;
@@ -81,7 +77,7 @@ export class Connector {
 
                                 break;
                             case headerId.objects:
-                                const count = autoview.readUint16()
+                                const count = autoview.readUint16();
                                 for (let i = 0; i < count; i++) {
                                     Sync.resolveBits(autoview);
                                 }
@@ -113,14 +109,13 @@ export class Connector {
             case messageType.debugCamPosition:
                 if (client.debugCam) {
                     const rangeDetector = client.debugCam.getComponentByType(RangeDetector);
-                    rangeDetector.range = msg.range / 2;
+                    rangeDetector.range = msg.range.mult(0.5);
                     client.debugCam.position.set(msg.position.x, msg.position.y);
                 }
                 break;
         }
     }
 }
-
 
 function createDebugCam(client: Client) {
     const cam = ObjectScope.game.createObject();
@@ -132,7 +127,4 @@ function createDebugCam(client: Client) {
     transfrom.init();
 
     return cam;
-
 }
-
-

@@ -5,7 +5,8 @@ import { datatype } from "../datagram";
 export enum drawableExtra {
     background = 0,
     terrain = 1,
-    entity = 2
+    entity = 2,
+    lights = 3,
 }
 
 export type SerialisedDrawable = {

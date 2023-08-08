@@ -2,8 +2,7 @@ import { Vector, Vectorlike } from "../types";
 import { BaseObject } from "../baseObject";
 import { Hitbox } from "../hitbox";
 
-
-export type RectInAreas = { position: Vector, x1: number, y1: number, x2: number, y2: number, inAreas: Set<Area>, parent: BaseObject }
+export type RectWithParent = { position: Vector; x1: number; y1: number; x2: number; y2: number; parent: BaseObject };
 
 //#region server
 export class Layer {
@@ -21,69 +20,76 @@ export class Layer {
     static getById(id: number): Layer {
         const layer = this.list.get(id);
         if (layer) return layer;
-        throw "no layer with this id"
+        throw "no layer with this id";
     }
 
-    addObject(rect: RectInAreas) {
+    addObject(rect: RectWithParent, areas: Set<Area>) {
         for (let x = this.toGridAxis(rect.x1); x <= this.toGridAxis(rect.x2); x++) {
             for (let y = this.toGridAxis(rect.y1); y <= this.toGridAxis(rect.y2); y++) {
                 let gridCoords = { x, y };
                 let gridIndex = Layer.toGridIndex(gridCoords);
                 let area = this.areas.get(gridIndex);
-                if(!area){
+                if (!area) {
                     area = new Area(this, gridCoords);
                     this.areas.set(gridIndex, area);
                 }
                 area.members.add(rect);
-                rect.inAreas.add(area);
+                areas.add(area);
             }
         }
     }
 
-    removeObject(physicsObject: RectInAreas) {
-        for (const area of physicsObject.inAreas) {
-            area.members.delete(physicsObject);
+    removeObject(physicsObject: RectWithParent, fromAreas: Set<Area>) {
+        for (const area of fromAreas) {
+            if (area.layer == this) area.members.delete(physicsObject);
         }
-        physicsObject.inAreas.clear();
     }
 
     getObjects(position: Vectorlike) {
         return this.getObjectsByGrid(this.toGrid(position));
-    
     }
 
     getObjectsByGrid(grid: Vectorlike) {
         let area = this.areas.get(Layer.toGridIndex(grid));
-        if (area == undefined) return new Set<RectInAreas>();
+        if (area == undefined) return new Set<RectWithParent>();
         return area.members;
     }
 
-    getNearbyObjects(position: Vector, range: number) {
-        const result: Array<Set<RectInAreas>> = [];
-        for (let x = this.toGridAxis(position.x - range); x <= this.toGridAxis(position.x + range); x++) {
-            for (let y = this.toGridAxis(position.y - range); y <= this.toGridAxis(position.y + range); y++) {
+    getNearbyObjects(position: Vector, range: Vectorlike) {
+        const result: Array<Set<RectWithParent>> = [];
+        for (let x = this.toGridAxis(position.x - range.x); x <= this.toGridAxis(position.x + range.x); x++) {
+            for (let y = this.toGridAxis(position.y - range.y); y <= this.toGridAxis(position.y + range.y); y++) {
                 result.push(this.getObjectsByGrid({ x, y }));
             }
         }
         return result;
     }
 
-    moveObject(rect: RectInAreas, position: Vector) {
+    getRelevantObjects(rect: RectWithParent) {
+        const result: Array<Set<RectWithParent>> = [];
+        for (let x = this.toGridAxis(rect.x1); x <= this.toGridAxis(rect.x2); x++) {
+            for (let y = this.toGridAxis(rect.y1); y <= this.toGridAxis(rect.y2); y++) {
+                result.push(this.getObjectsByGrid({ x, y }));
+            }
+        }
+        return result;
+    }
+
+    moveObject(rect: RectWithParent, position: Vector, areas: Set<Area>) {
         const orig = rect.position;
         const offset = position.diff(orig);
         let updateRequired =
             this.toGridAxis(rect.x1) != this.toGridAxis(rect.x1 + offset.x) ||
             this.toGridAxis(rect.y1) != this.toGridAxis(rect.y1 + offset.y) ||
             this.toGridAxis(rect.x2) != this.toGridAxis(rect.x2 + offset.x) ||
-            this.toGridAxis(rect.y2) != this.toGridAxis(rect.y2 + offset.y)
-
+            this.toGridAxis(rect.y2) != this.toGridAxis(rect.y2 + offset.y);
 
         if (updateRequired) {
-            this.removeObject(rect);
-            rect.position.set(position.x, position.y)
-            this.addObject(rect);
+            this.removeObject(rect, areas);
+            rect.position.set(position.x, position.y);
+            this.addObject(rect, areas);
         } else {
-            rect.position.set(position.x, position.y)
+            rect.position.set(position.x, position.y);
         }
     }
 
@@ -101,7 +107,7 @@ export class Layer {
 }
 
 export class Area {
-    members: Set<RectInAreas> = new Set();
+    members: Set<RectWithParent> = new Set();
     gridPosition: Vector;
     positionIndex: number;
     layer: Layer;
@@ -112,14 +118,12 @@ export class Area {
         layer.areas.set(this.positionIndex, this);
     }
 
-    addObject(physicsObject: RectInAreas) {
+    addObject(physicsObject: RectWithParent) {
         this.members.add(physicsObject);
-        physicsObject.inAreas.add(this);
     }
 
-    removeObject(physicsObject: RectInAreas) {
+    removeObject(physicsObject: RectWithParent) {
         this.members.delete(physicsObject);
-        physicsObject.inAreas.delete(this);
     }
 }
 

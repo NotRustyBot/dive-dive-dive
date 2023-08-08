@@ -7,6 +7,7 @@ import { Vector } from "@shared/types";
 import { startDevServer } from "./devserver";
 import { serverMode } from "@shared/serverInfo";
 import { messageType } from "@shared/messages";
+import { initCommon, submarineLayer, terrainLayer } from "@shared/common";
 import { Detector } from "./server/detector";
 import { Detectable } from "./server/detectable";
 import { RangeDetector } from "./server/rangeDetector";
@@ -14,9 +15,9 @@ import { RangeDetectable } from "./server/rangeDetectable";
 import { Client } from "./client";
 import { drawableExtra } from "@shared/mock/drawable";
 
+initCommon();
 
 startDevServer();
-
 NetManager.initDatagrams();
 NetManager.identity = 0;
 export const connector = new Connector();
@@ -26,13 +27,13 @@ const game = ObjectScope.game;
 
 export enum physicsLayerEnum {
     collision,
-    detectable
+    detectable,
 }
 
 export const physicsLayers: Record<physicsLayerEnum, Layer> = {
     [physicsLayerEnum.collision]: new Layer(),
     [physicsLayerEnum.detectable]: new Layer(),
-}
+};
 
 function createInfoObject() {
     const serverInfoObject = ObjectScope.network.createObject();
@@ -44,7 +45,6 @@ function createInfoObject() {
 }
 
 createInfoObject();
-
 
 export const clientSubs = new Map<number, SubmarineBehaviour>();
 export function createSubmarine(client: Client) {
@@ -66,11 +66,12 @@ export function createSubmarine(client: Client) {
     hitbox.sides = new Vector(250, 100);
     drawable.url = "/assets/brandy.png";
     drawable.extra = drawableExtra.entity;
-    hitbox.layerId = 0;
+    hitbox.peek = [terrainLayer, submarineLayer];
+    hitbox.poke = [submarineLayer];
     net.authorize([submarine, transform, drawable, physics]);
     net.authorize([control], client.id);
     detector.subscribe(client);
-    detector.range = 4000;
+    detector.range = new Vector(4000, 4000);
     physics.init();
     hitbox.init();
     control.init();
@@ -96,7 +97,6 @@ setInterval(() => {
         game.fire("collisions", dt * 60);
         game.fire("physics", dt * 60);
         game.fire("post-collision", dt * 60);
-
     }
 
     Detector.processAll();
@@ -110,7 +110,6 @@ setInterval(() => {
         sendView.setUint16(sbindex, 1);
     }
 
-
     const bindex = sendView.index;
 
     for (const [_, client] of connector.clients) {
@@ -123,7 +122,6 @@ setInterval(() => {
     }
 
     if (serverInfo.tick == 1) serverInfo.tick = 0;
-
 }, 1000 / tps);
 
 export function clearAll() {

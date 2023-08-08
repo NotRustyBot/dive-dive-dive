@@ -10,13 +10,17 @@ import { SubControl } from "@shared/mock/submarineControl";
 import { ServerInfo } from "@shared/serverInfo";
 import { Transform } from "@shared/transform";
 import { Drawable } from "@shared/mock/drawable";
+import { Light } from "@shared/mock/light";
 import { Physics } from "@shared/physics";
 import { Hitbox } from "@shared/hitbox";
 import { Sync } from "@shared/sync"
+import { FishBehaviour } from "@shared/fish"
 import { RangeDetectable } from "./server/rangeDetectable";
 import { RangeDetector } from "./server/rangeDetector";
 
+
 Sync.initialise();
+Light.initialise();
 Hitbox.initialise();
 Physics.initialise();
 Drawable.initialise();
@@ -26,6 +30,7 @@ ServerInfo.initialise();
 DynamicHitbox.initialise();
 PhysicsDrawable.initialise();
 SubmarineBehaviour.initialise();
+FishBehaviour.initialise();
 
 RangeDetectable.initialise();
 RangeDetector.initialise();
@@ -41,6 +46,9 @@ export { Transform } from "@shared/transform";
 export { Physics } from "@shared/physics";
 export { Hitbox } from "@shared/hitbox";
 export { Sync } from "@shared/sync";
+export { FishBehaviour } from "@shared/fish"
+export { Light } from "@shared/mock/light";
+
 
 
 

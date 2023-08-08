@@ -8,6 +8,7 @@ import { Hitbox } from "./hitbox";
 import { clamp } from "./utils";
 import { datatype } from "./datagram";
 import { ObjectScope } from "./objectScope";
+import { terrainLayer } from "./common";
 
 export type SerialisedSubmarineBehaviour = {
     physics: number;
@@ -94,24 +95,24 @@ export class SubmarineBehaviour extends NetComponent {
     }
 
     ["post-collision"](dt: number) {
-        for (const overlap of this.hitbox.overlaps) {
-            let useOffset = new Vector();
-            const speed = this.physics.velocity.length();
-            if (speed > 0.5) {
-                console.log(speed);
-                this.leaking += speed - 0.2;
+        for (const [layer, overlaps] of this.hitbox.overlaps) {
+            for (const overlap of overlaps) {
+                let useOffset = new Vector();
+                const speed = this.physics.velocity.length();
+                if (speed > 0.5) {
+                    this.leaking += speed - 0.2;
+                }
+                if (Math.abs(overlap.offset.x) > Math.abs(overlap.offset.y)) {
+                    useOffset.y = overlap.offset.y;
+                    this.physics.velocity.y = 0;
+                } else {
+                    useOffset.x = overlap.offset.x;
+                    this.physics.velocity.x = 0;
+                }
+                this.parent.position.add(useOffset);
+                this.parent.transform.invalidateCache(); 
             }
-            if (Math.abs(overlap.offset.x) > Math.abs(overlap.offset.y)) {
-                useOffset.y = overlap.offset.y;
-                this.physics.velocity.y = 0;
-            } else {
-                useOffset.x = overlap.offset.x;
-                this.physics.velocity.x = 0;
-            }
-            this.parent.position.add(useOffset);
-            this.parent.transform.invalidateCache();
         }
-
         this.invalidateCache();
     }
 

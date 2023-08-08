@@ -121,8 +121,8 @@ export class DevAttach {
 
             this.graphics.lineStyle(2 / Camera.scale, "#ffaaaa", alpha);
 
-            for (const area of this.hitbox.inAreas) {
-                this.graphics.drawRect(area.gridPosition.x * this.hitbox.layer.size, area.gridPosition.y * this.hitbox.layer.size, this.hitbox.layer.size, this.hitbox.layer.size);
+            for (const area of this.hitbox.pokeAreas) {
+                this.graphics.drawRect(area.gridPosition.x * area.layer.size, area.gridPosition.y * area.layer.size, area.layer.size, area.layer.size);
             }
         }
 
