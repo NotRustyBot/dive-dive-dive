@@ -1,30 +1,28 @@
-import { NetComponent } from "./netComponent";
-
 export type IncidentHandler = (e: any) => any;
 
 
 export class IncidentRotuer {
-    routes = new Map<string, IncidentRotue>();
+    routes: Record<string, IncidentRotue> = {};
     subscribe<K extends string>(name: K, component: trippable<K>) {
-        let route = this.routes.get(name);
+        let route = this.routes[name];
         if (!route) {
             route = new IncidentRotue(name);
-            this.routes.set(name, route);
+            this.routes[name] = route;
         }
         route.subscribe(component);
     }
 
     unsubscribe<K extends string>(name: K, component: trippable<K>) {
-        const route = this.routes.get(name);
+        const route = this.routes[name];
         if (route)
             route.unsubscribe(component);
     }
 
     fire(name: string, params?: any) {
-        let route = this.routes.get(name);
+        let route = this.routes[name];
         if (!route) {
             route = new IncidentRotue(name);
-            this.routes.set(name, route);
+            this.routes[name] = route;
         }
 
         route.fire(params);
