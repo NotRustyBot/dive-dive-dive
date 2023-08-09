@@ -25,7 +25,7 @@ export class BeaconDeployerPart extends Part {
         this.submarine.commands.subscribe("deploy-beacon", this);
     }
 
-    ["deploy-beacon"]() {
+    ["deploy-beacon"](...params: any) {
 
     }
 

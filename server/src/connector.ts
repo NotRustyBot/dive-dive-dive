@@ -116,12 +116,14 @@ export class Connector {
                 break;
 
             case messageType.partActivity:
+                break;
+
+            case messageType.partActivityLinked:
                 {
                     const object = ObjectScope.network.getObject(msg.objectId);
                     const subBehaviour = object.getComponentByType(SubmarineBehaviour);
-                    if(subBehaviour.owner == client.id){
-                        if(msg.action == partActions.deployBeacon)
-                        subBehaviour.commands.fire("deploy-beacon");
+                    if (subBehaviour.owner == client.id) {
+                        if (msg.action == partActions.deployBeacon) subBehaviour.commands.fire("deploy-beacon", {gameId: msg.linkId, client});
                     }
                 }
                 break;

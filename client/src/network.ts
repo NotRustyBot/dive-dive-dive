@@ -5,7 +5,6 @@ import { Message, messageType, netMessage } from "@shared/messages";
 import { ServerInfo } from "@shared/serverInfo";
 import { ObjectScope } from "@shared/objectScope";
 
-
 export class Network {
     static websocket: WebSocket;
     static server = "ws://10.200.140.14";
@@ -14,6 +13,8 @@ export class Network {
     static autoview = new AutoView(new ArrayBuffer(1000));
     static secret = "";
     static tempAuthority: Array<Sync> = [];
+    /**netId -> gameId*/
+    static objectLinks = new Map<number, number>();
     static sendCount = 0;
     static start() {
         NetManager.identity = parseInt(localStorage.getItem("sun_identity") ?? "0");
@@ -26,8 +27,8 @@ export class Network {
             this.autoview.writeUint16(headerId.handshake);
             NetManager.connectRequest.serialise<HandshakeRequest>(this.autoview, {
                 clientId: NetManager.identity,
-                secret: this.secret
-            })
+                secret: this.secret,
+            });
             this.send();
         });
         this.websocket.addEventListener("message", this.parseMessage);
@@ -36,7 +37,6 @@ export class Network {
     static parseMessage(message: any) {
         const view = new AutoView(message.data);
         while (view.index < view.buffer.byteLength) {
-
             const packetType = view.readUint16() as headerId;
             switch (packetType) {
                 case headerId.handshake:
@@ -49,7 +49,7 @@ export class Network {
                 case headerId.objects:
                     const count = view.readUint16();
                     for (let i = 0; i < count; i++) {
-                        Sync.resolveBits(view);
+                        Sync.resolveBits(view, Network.objectLinks);
                     }
                     break;
                 case headerId.message:
@@ -66,25 +66,31 @@ export class Network {
                 ServerInfo.get().tick = 1;
                 break;
             case messageType.untrackObject:
+                {
+                    const toUntrack = ObjectScope.network.getObject(msg.objectId);
+                    toUntrack.remove();
+                }
+                break;
 
-                const toUntrack = ObjectScope.network.getObject(msg.objectId);
-                toUntrack.remove();
+            case messageType.objectLink:
+                {
+                    this.objectLinks.set(msg.netId, msg.linkId);
+                }
                 break;
         }
     }
 
     private static messages = new Array<netMessage>();
-    static message(msg: netMessage){
+    static message(msg: netMessage) {
         this.messages.push(msg);
     }
 
     static send() {
-        if (this.websocket.readyState != this.websocket.OPEN) return
+        if (this.websocket.readyState != this.websocket.OPEN) return;
         this.websocket.send(this.autoview.buffer.slice(0, this.autoview.index));
         this.autoview.index = 0;
         this.sendCount++;
     }
-
 
     static sendMessages() {
         for (const msg of this.messages) {
@@ -108,13 +114,12 @@ export class Network {
                 actualSize++;
             }
         }
-        
+
         Network.autoview.setUint16(bindex, Network.tempAuthority.length + actualSize);
         Network.tempAuthority = [];
 
-        this.send()
+        this.send();
     }
-
 }
 
 NetManager.initDatagrams();
