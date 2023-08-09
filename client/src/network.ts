@@ -51,6 +51,11 @@ export class Network {
                     for (let i = 0; i < count; i++) {
                         Sync.resolveBits(view, Network.objectLinks);
                     }
+
+                    if (Network.objectLinks.size != 0) {
+                        console.warn("Removing stale links");
+                        Network.objectLinks.clear();
+                    }
                     break;
                 case headerId.message:
                     const msg = Message.read(view);
