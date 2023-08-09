@@ -53,7 +53,7 @@ export class Network {
                     }
 
                     if (Network.objectLinks.size != 0) {
-                        console.warn(`Removing stale ${Network.objectLinks.size} links`);
+                        console.warn(`Removing stale ${Network.objectLinks.size} links.`);
                         Network.objectLinks.clear();
                     }
                     break;
