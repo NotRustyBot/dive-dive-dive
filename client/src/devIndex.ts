@@ -9,6 +9,8 @@ import { app } from "./index";
 import { DevAttach } from "./dev/devDebugAttach";
 import { Camera } from "./camera";
 import { DevControl, InteractionMode, interactionMode } from "./dev/devControls";
+import { NetComponent } from "@shared/netComponent";
+import { Component } from "@shared/component";
 
 let factories: Array<string> = [];
 
@@ -102,3 +104,30 @@ function uploadFile(file: File, x: number, y: number) {
 }
 
 startDragDrop();
+
+fetch(baseDebugUrl + "/info").then(async (r) => {
+    const info = await r.json();
+
+    const skeys = info.netComponents as Array<{typeId: string, name: string}>
+    const serverKeys = new Set(skeys.map(nc => nc.typeId));
+
+    const keys = new Set(
+        Object.entries(Component.componentTypes)
+            .filter(([k, comp]) => comp.prototype instanceof NetComponent)
+            .map(([k, comp]) => k)
+    );
+
+    for (const key of keys) {
+        if (serverKeys.has(key)) {
+            serverKeys.delete(key);
+            keys.delete(key);
+        }
+    }
+
+    if (keys.size == 0 && serverKeys.size == 0) return;
+    let warning = "Mismatch between server and client NetComponents.";
+    if(keys.size) warning += "\n\nserver is missing: " + [...keys].map(k => NetComponent.componentTypes[parseInt(k)].name).join(", ");
+    if(serverKeys.size) warning += "\n\nclient is missing: " + [...serverKeys].map(k => skeys.find(nc => k == nc.typeId).name).join(", ");
+
+    console.warn(warning);
+});
