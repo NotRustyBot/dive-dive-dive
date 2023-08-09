@@ -103,6 +103,8 @@ export class DevAttach {
     }
 
     ["draw"](dt: number) {
+        if(this.drawable && this.drawable.sprite.destroyed) this.drawable = undefined;
+
         if (!this.hitbox) this.hitbox = this.parent.getComponentByType(Hitbox);
         if (!this.hitbox) this.hitbox = this.parent.getComponentByType(DynamicHitbox);
         if (!this.drawable) this.drawable = this.parent.getComponentByType(Drawable);
@@ -149,7 +151,7 @@ export class DevAttach {
 
     static spriteClicks = true;
     inboud(vector: Vectorlike) {
-        if (DevAttach.spriteClicks && this.drawable) {
+        if (DevAttach.spriteClicks && this.drawable && !this.drawable.sprite.destroyed) {
             const width = this.drawable.sprite.width;
             const height = this.drawable.sprite.height;
             const x1 = this.parent.position.x - width / 2;

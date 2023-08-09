@@ -6,19 +6,19 @@ import { SerialisedComponent, commonDatatype } from "./component";
 import { NetComponent } from "./netComponent";
 
 export type ComponentAuthority = {
-    authority: number,
-    id: number
-}
+    authority: number;
+    id: number;
+};
 
 export type SerialisedSync = {
-    components: Array<ComponentAuthority>
+    components: Array<ComponentAuthority>;
 };
 
 export type SerialisedSyncComponent = SerialisedSync & SerialisedComponent;
 
 class ComponentCacheInfo {
     component: NetComponent;
-    cache: Record<number, number> = {}
+    cache: Record<number, number> = {};
     constructor(component: NetComponent) {
         this.component = component;
     }
@@ -26,7 +26,6 @@ class ComponentCacheInfo {
     needsUpdate(target: number): boolean {
         const targetState = this.cache[target];
         if (targetState === this.component.cacheId) {
-
             return false;
         }
         this.cache[target] = this.component.cacheId;
@@ -35,10 +34,10 @@ class ComponentCacheInfo {
 }
 
 export class Sync extends NetComponent {
-    static localAuthority = new Set<Sync>()
+    static localAuthority = new Set<Sync>();
     static componentAuthority = new Datagram().append<ComponentAuthority>({
         authority: datatype.uint32,
-        id: commonDatatype.compId
+        id: commonDatatype.compId,
     });
     cache = new Map<number, Map<number, ComponentCacheInfo>>();
     get identity(): number {
@@ -48,7 +47,7 @@ export class Sync extends NetComponent {
     static override datagramDefinition(): void {
         super.datagramDefinition();
         this.datagram = this.datagram.cloneAppend<SerialisedSync>({
-            components: [datatype.array, this.componentAuthority]
+            components: [datatype.array, this.componentAuthority],
         });
         this.cacheSize = (this.componentAuthority.calculateMinimalSize() + 2 * 12) * 32;
     }
@@ -82,10 +81,10 @@ export class Sync extends NetComponent {
                 actualSize++;
             }
         }
-        
+
         view.setUint8(index, actualSize);
 
-        if(actualSize == 0) {
+        if (actualSize == 0) {
             view.index = bindex;
             return false;
         }
@@ -101,14 +100,21 @@ export class Sync extends NetComponent {
         }
     }
 
-    static resolveBits(view: AutoView) {
+    static resolveBits(view: AutoView, links?: Map<number, number>) {
         const data = BaseObject.getHeaderFromBits(view) as SerialisedBaseObject;
         let parent = ObjectScope.network.getObject(data.id);
         data.componentData = [];
         const compCount = view.readUint8();
         if (!parent) {
-            parent = ObjectScope.game.createObject();
-            ObjectScope.network.setObject(parent, data.id);
+            if (links && links.has(data.id)) {
+                parent = ObjectScope.game.getObject(links.get(data.id));
+                parent.clearComponents();
+                links.delete(data.id)
+                ObjectScope.network.setObject(parent, data.id);
+            } else {
+                parent = ObjectScope.game.createObject();
+                ObjectScope.network.setObject(parent, data.id);
+            }
         }
 
         for (let i = 0; i < compCount; i++) {
@@ -137,9 +143,8 @@ export class Sync extends NetComponent {
     override fromSerialisable(data: SerialisedSyncComponent) {
         super.fromSerialisable(data);
         for (const comp of data.components) {
-            if (!this.cache.has(comp.authority)) this.cache.set(comp.authority, new Map())
-            if (!this.cache.get(comp.authority).has(comp.id))
-                this.cache.get(comp.authority).set(comp.id, new ComponentCacheInfo(this.parent.getComponent(comp.id)));
+            if (!this.cache.has(comp.authority)) this.cache.set(comp.authority, new Map());
+            if (!this.cache.get(comp.authority).has(comp.id)) this.cache.get(comp.authority).set(comp.id, new ComponentCacheInfo(this.parent.getComponent(comp.id)));
         }
         this.considerLocalAuthority();
     }

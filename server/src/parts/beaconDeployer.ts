@@ -3,15 +3,18 @@ import { ObjectScope } from "@shared/objectScope";
 import { BeaconDeployerPart as MockBeaconDeployerPart } from "@shared/parts/beaconDeployer";
 import { Drawable, Light, Sync, Transform } from "../registry";
 import { RangeDetectable } from "../server/rangeDetectable";
+import { connector } from "src/main";
+import { Client } from "src/client";
+import { messageType } from "@shared/messages";
 
 export class BeaconDeployerPart extends MockBeaconDeployerPart {
-    override ["deploy-beacon"](): void {
-        const image = ObjectScope.game.createObject();
-        const transform = image.addComponent(Transform);
-        const drawable = image.addComponent(Drawable);
-        const sync = image.addComponent(Sync);
-        const glow = image.addComponent(Light);
-        const detectable = image.addComponent(RangeDetectable);
+    override ["deploy-beacon"](data: { gameId: number; client: Client }): void {
+        const beacon = ObjectScope.game.createObject();
+        const transform = beacon.addComponent(Transform);
+        const drawable = beacon.addComponent(Drawable);
+        const sync = beacon.addComponent(Sync);
+        const glow = beacon.addComponent(Light);
+        const detectable = beacon.addComponent(RangeDetectable);
         drawable.url = "/assets/beacon.png";
         drawable.extra = drawableExtra.background;
         transform.position.set(this.parent.position.x, this.parent.position.y);
@@ -26,6 +29,7 @@ export class BeaconDeployerPart extends MockBeaconDeployerPart {
         sync.init();
         glow.init();
         detectable.init();
-        ObjectScope.network.scopeObject(image);
+        ObjectScope.network.scopeObject(beacon);
+        data.client.message({ typeId: messageType.objectLink, netId: beacon.getId(ObjectScope.network), linkId: data.gameId });
     }
 }

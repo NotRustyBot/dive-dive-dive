@@ -9,9 +9,11 @@ export enum messageType {
     debugCam = 4,
     debugCamPosition = 5,
     partActivity = 6,
+    partActivityLinked = 7,
+    objectLink = 8,
 }
 
-export type netMessage = tickMessage | untrackObjectMessage | debugCamMessage | debugCamPositionMessage | partActivityMessage;
+export type netMessage = tickMessage | untrackObjectMessage | debugCamMessage | debugCamPositionMessage | partActivityMessage | partActivityLinkedMessage | objectLinkMessage;
 
 type tickMessage = {
     typeId: messageType.tick;
@@ -39,6 +41,19 @@ type partActivityMessage = {
     action: number;
 };
 
+type partActivityLinkedMessage = {
+    typeId: messageType.partActivityLinked;
+    objectId: number;
+    linkId: number;
+    action: number;
+};
+
+type objectLinkMessage = {
+    typeId: messageType.objectLink;
+    netId: number;
+    linkId: number;
+};
+
 const messageIdDataType = datatype.uint8;
 
 export class Message {
@@ -64,6 +79,17 @@ export class Message {
             typeId: messageIdDataType,
             objectId: commonDatatype.objectId,
             action: datatype.uint8,
+        }),
+        [messageType.partActivityLinked]: new Datagram().append<partActivityLinkedMessage>({
+            typeId: messageIdDataType,
+            objectId: commonDatatype.objectId,
+            linkId: commonDatatype.objectId,
+            action: datatype.uint8,
+        }),
+        [messageType.objectLink]: new Datagram().append<objectLinkMessage>({
+            typeId: messageIdDataType,
+            linkId: commonDatatype.objectId,
+            netId: commonDatatype.objectId,
         }),
     };
     static write<T extends netMessage>(view: AutoView, data: T) {
