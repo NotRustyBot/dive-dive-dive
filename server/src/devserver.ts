@@ -12,6 +12,8 @@ import { RangeDetectable } from "./server/rangeDetectable";
 import { Detector } from "./server/detector";
 import { drawableExtra } from "@shared/mock/drawable";
 import { submarineLayer, terrainLayer } from "@shared/common";
+import { Component } from "@shared/component";
+import { NetComponent } from "@shared/netComponent";
 
 export function startDevServer() {
     const assetsPath = "../client/static/assets/";
@@ -24,6 +26,16 @@ export function startDevServer() {
         const data = ObjectScope.network.toDeepSerialisable();
         fs.writeFileSync("persistent.json", JSON.stringify(data));
         res.send("OK");
+    });
+
+    app.get("/dev/info", function (req, res) {
+        res.send(
+            JSON.stringify({
+                netComponents: Object.entries(Component.componentTypes)
+                    .filter(([k, comp]) => comp.prototype instanceof NetComponent)
+                    .map(([k, comp]) => ({typeId: k, name: comp.name})),
+            })
+        );
     });
 
     app.post("/dev/upload", function (req, res) {

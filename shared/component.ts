@@ -21,7 +21,7 @@ export const commonDatatype = {
 }
 
 export class Component {
-    protected static componentTypes: Record<number, typeof Component> = {};
+    static componentTypes: Record<number, typeof Component> = {};
     static typeId: number
     get typeId(): number {
         return (<typeof Component>this.constructor).typeId;
@@ -34,7 +34,6 @@ export class Component {
     static initialise() {
         this.typeId = bbid(this.name);
         this.componentTypes[this.typeId] = this;
-        console.log(this.name + ": " + this.typeId);
     }
 
     constructor(parent: BaseObject, id: number) {
