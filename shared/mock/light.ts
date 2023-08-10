@@ -1,5 +1,5 @@
 import { BaseObject } from "../baseObject";
-import { SerialisedComponent } from "../component";
+import { SerialisedComponent, commonDatatype } from "../component";
 import { datatype } from "../datagram";
 import { NetComponent } from "../netComponent";
 import { Vector, Vectorlike } from "../types";
@@ -27,7 +27,7 @@ export class Light extends NetComponent {
         this.datagram = this.datagram.cloneAppend<SerialisedLight>({
             range: datatype.float32,
             intensity: datatype.float32,
-            tint: datatype.uint32,
+            tint: commonDatatype.color,
             extra: datatype.uint8,
             offset: datatype.vector32
         });

@@ -11,13 +11,17 @@ export class Camera {
         return new Vector((v.x - Camera.size.x / 2) / Camera.scale - Camera.position.x, (v.y - Camera.size.y / 2) / Camera.scale - Camera.position.y);
     }
 
-    static move(v: Vectorlike) {
-        if(this.detached) return;
-        Camera.position.set(v.x, v.y)
+    static toScreen(v: Vectorlike) {
+        return new Vector((v.x + Camera.position.x) * Camera.scale, (v.y + Camera.position.y) * Camera.scale);
     }
 
-    static detachedMove(v: Vectorlike){
-        Camera.position.set(v.x, v.y)
+    static move(v: Vectorlike) {
+        if (this.detached) return;
+        Camera.position.set(v.x, v.y);
+    }
+
+    static detachedMove(v: Vectorlike) {
+        Camera.position.set(v.x, v.y);
     }
 
     static glide(position: Vector, grace = 9) {

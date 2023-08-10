@@ -14,10 +14,12 @@ import { messageType } from "@shared/messages";
 import { drawableExtra } from "@shared/mock/drawable";
 import { initCommon } from "@shared/common";
 import { TerrainFilter } from "./filters/terrain/terrainFilter";
+import { UI, Waypoint } from "./ui/uiHandler";
 
 const game = ObjectScope.game;
 
 initCommon();
+UI.init();
 
 export const app = new PIXI.Application<HTMLCanvasElement>({ backgroundColor: "#112244" });
 export let currentSubmarine: SubmarineBehaviour;
@@ -26,15 +28,17 @@ export let time = 0;
 
 document.body.insertBefore(app.view, document.body.firstChild);
 function resize() {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-    app.stage.position.set(window.innerWidth / 2, window.innerHeight / 2);
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    app.renderer.resize(windowWidth, windowHeight);
+    app.stage.position.set(windowWidth / 2, windowHeight / 2);
     worldLayer.filterArea.x = Math.floor(0);
     worldLayer.filterArea.y = Math.floor(0);
-    worldLayer.filterArea.width = Math.floor(window.innerWidth);
-    worldLayer.filterArea.height = Math.floor(window.innerHeight);
+    worldLayer.filterArea.width = Math.floor(windowWidth);
+    worldLayer.filterArea.height = Math.floor(windowHeight);
 
-    Camera.size.x = window.innerWidth;
-    Camera.size.y = window.innerHeight;
+    Camera.size.x = windowWidth;
+    Camera.size.y = windowHeight;
 }
 
 export const worldLayer = new PIXI.Container();
@@ -43,6 +47,7 @@ export const backgroundLayer = new PIXI.Container();
 export const terrainLayer = new PIXI.Container();
 export const entityLayer = new PIXI.Container();
 export const lightsLayer = new PIXI.Container();
+export const uiLayer = new PIXI.Container();
 realLayer.addChild(backgroundLayer);
 realLayer.addChild(terrainLayer);
 realLayer.addChild(entityLayer);
@@ -50,6 +55,7 @@ worldLayer.addChild(realLayer);
 worldLayer.addChild(lightsLayer);
 
 app.stage.addChild(worldLayer);
+app.stage.addChild(uiLayer);
 window.onresize = resize;
 worldLayer.filterArea = new PIXI.Rectangle();
 realLayer.filterArea = worldLayer.filterArea;
@@ -58,6 +64,9 @@ lightsLayer.filterArea = realLayer.filterArea;
 realLayer.filters = [new ScreenFilter()];
 terrainLayer.filters = [new TerrainFilter()];
 resize();
+
+const spawnPoint = new Waypoint({ x: 0, y: 0 });
+spawnPoint.name = "spawn";
 
 export const currentSubPos = new Vector();
 Camera.scale = 0.5;

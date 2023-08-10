@@ -105,7 +105,6 @@ export class SubmarineBehaviour extends NetComponent {
         }
 
         this.battery = clamp(0, this.stats.battery, this.battery);
-        console.log(this.battery.toFixed(2) + "/" + this.stats.battery);
 
         this.invalidateCache();
     }

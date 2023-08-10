@@ -1,6 +1,6 @@
 import { AutoView } from "@shared/datagram";
 import { Connector } from "./connector";
-import { Assemblies, BeaconDeployerPart, DynamicHitbox, Hitbox, Message, NetManager, ObjectScope, Physics, PhysicsDrawable, ServerInfo, SubControl, SubmarineBehaviour, Sync, Transform } from "./registry";
+import { Assemblies, BeaconDeployerPart, DynamicHitbox, Hitbox, MarkerDetector, Message, NetManager, ObjectScope, Physics, PhysicsDrawable, ServerInfo, SubControl, SubmarineBehaviour, Sync, Transform } from "./registry";
 import { Layer } from "@shared/physics/chunks";
 import { headerId } from "@shared/netManager";
 import { Vector } from "@shared/types";
@@ -59,6 +59,7 @@ export function createSubmarine(client: Client) {
     const detectable = sub.addComponent(RangeDetectable);
     const assemblies = sub.addComponent(Assemblies);
     const beaconDeployer = sub.addComponent(BeaconDeployerPart);
+    const markerDetector = sub.addComponent(MarkerDetector);
     beaconDeployer.submarine = submarine;
     beaconDeployer.count = 1;
     control.submarine = submarine;
@@ -87,6 +88,7 @@ export function createSubmarine(client: Client) {
     physics.init();
     hitbox.init();
     control.init();
+    markerDetector.init();
     drawable.init();
     net.init();
     submarine.init();

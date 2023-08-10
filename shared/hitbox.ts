@@ -145,8 +145,8 @@ export class Hitbox extends NetComponent {
         data.y = this.offset.y;
         data.w = this.sides.x;
         data.h = this.sides.y;
-        data.peek = this.peek;
-        data.poke = this.poke;
+        data.peek = this.peek.map((o) => ({ id: o.id }));
+        data.poke = this.poke.map((o) => ({ id: o.id }));
         return data;
     }
 

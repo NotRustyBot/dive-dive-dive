@@ -4,8 +4,8 @@ import { drawableExtra } from "@shared/mock/drawable";
 import { ObjectScope } from "@shared/objectScope";
 import { BeaconDeployerPart as MockBeaconDeployerPart } from "@shared/parts/beaconDeployer";
 import { Transform } from "@shared/transform";
-import { Drawable } from "src/drawable";
-import { Network } from "src/network";
+import { Drawable } from "../drawable";
+import { Network } from "../network";
 
 export class BeaconDeployerPart extends MockBeaconDeployerPart {
     override ["deploy-beacon"](): void {

@@ -2,7 +2,7 @@ import { BaseObject } from "@shared/baseObject";
 import { Component } from "@shared/component";
 import { ObjectScope } from "@shared/objectScope";
 import { Sync } from "@shared/sync";
-import { Network } from "src/network";
+import { Network } from "../network";
 import { DevAttach } from "./devDebugAttach";
 import { NetComponent } from "@shared/netComponent";
 

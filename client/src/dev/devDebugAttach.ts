@@ -10,9 +10,9 @@ import { ServerInfo, serverMode } from "@shared/serverInfo";
 import { Camera } from "../camera";
 import { DevObjectInfo } from "./devObjectInfo";
 import { InteractionMode, interactionMode } from "./devControls";
-import { Network } from "src/network";
+import { Network } from "../network";
 import { Sync } from "@shared/sync";
-import { keys } from "src/control";
+import { keys } from "../control";
 
 export class DevAttach {
     static container = new Container();
