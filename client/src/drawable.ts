@@ -3,7 +3,7 @@ import { Container, Sprite, Texture } from "pixi.js";
 import { Drawable as MockDrawable } from "@shared/mock/drawable";
 import { BaseObject } from "@shared/baseObject";
 import { ObjectScope } from "@shared/objectScope";
-import { addChildByType } from "src";
+import { addChildByType } from "./index";
 
 
 export class Drawable extends MockDrawable {

@@ -12,11 +12,13 @@ import { ServerInfo } from "@shared/serverInfo"
 import { FishBehaviour } from "@shared/fish"
 import { Assemblies } from "@shared/submarineAssemblies"
 import { BeaconDeployerPart } from "./parts/beaconDeployer"
+import { Marker } from "marker"
 
 
 export function initModules(){
     SubControl.initialise();
     ServerInfo.initialise();
+    Marker.initialise();
     Drawable.initialise();
     DynamicHitbox.initialise();
     Hitbox.initialise();

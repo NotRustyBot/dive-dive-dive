@@ -1,15 +1,12 @@
-import { BaseObject } from "../baseObject";
 import { SubmarinePart } from "../common";
 import { SerialisedComponent, commonDatatype } from "../component";
 import { datatype } from "../datagram";
 import { NetComponent } from "../netComponent";
-import { ObjectScope } from "../objectScope";
 import { SubmarineBehaviour } from "../submarine";
 
 export type SerialisedPart = {
     submarinePart: number;
-    submarine: number;
-    submarineBehaviourId: number;
+    submarineBehaviour: number;
     count: number;
 }
 
@@ -22,8 +19,7 @@ export class Part extends NetComponent {
     static override datagramDefinition(): void {
         super.datagramDefinition();
         this.datagram = this.datagram.cloneAppend<SerialisedPart>({
-            submarine: commonDatatype.objectId,
-            submarineBehaviourId: commonDatatype.compId,
+            submarineBehaviour: commonDatatype.compId,
             submarinePart: datatype.uint8,
             count: datatype.uint8
         });
@@ -31,17 +27,20 @@ export class Part extends NetComponent {
 
     override toSerialisable(): SerialisedPartComponent {
         const data = super.toSerialisable() as SerialisedPartComponent;
-        data.submarine = this.submarine.parent.getId(ObjectScope.network);
-        data.submarineBehaviourId = this.submarine.id;
+        data.submarineBehaviour = this.submarine.id;
         data.submarinePart = this.part.type;
         return data;
     }
 
+    override init(): void {
+
+    }
+
     override fromSerialisable(data: SerialisedPartComponent) {
-        this.submarine = ObjectScope.network.getObject(data.submarine).getComponent(data.submarineBehaviourId);
+        super.fromSerialisable(data);
         this.part = SubmarinePart.get(data.submarinePart);
+        this.submarine = this.parent.getComponent(data.submarineBehaviour);
         this.count = data.count;
-        super.fromSerialisable(data)
     }
 }
 

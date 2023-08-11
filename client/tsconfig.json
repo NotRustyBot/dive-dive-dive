@@ -2,7 +2,7 @@
     "compilerOptions": {
     "noImplicitOverride": true,
 
-        "baseUrl": "./",
+        "baseUrl": "./src",
         "outDir": "./dist",
         "module": "CommonJS",
         "moduleResolution": "Node",
@@ -13,7 +13,7 @@
         "typeRoots": ["node_modules/@types"],
         "sourceMap": true,
         "paths": {
-            "@shared/*": ["../shared/*"],
+            "@shared/*": ["../../shared/*"],
         }
     },
 }

@@ -82,6 +82,19 @@ export class Network {
                     this.objectLinks.set(msg.netId, msg.linkId);
                 }
                 break;
+
+            case messageType.actionFailed:
+                {
+                    console.warn(msg.text);
+                }
+                break;
+
+            case messageType.actionFailedLinked:
+                {
+                    ObjectScope.game.getObject(msg.linkId).remove();
+                    console.warn(msg.text);
+                }
+                break;
         }
     }
 

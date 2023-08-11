@@ -3,7 +3,7 @@ import type { FilterSystem, RenderTexture, CLEAR_MODES } from '@pixi/core';
 import vertex from './screen.vert';
 import fragment from './screen.frag';
 import { currentSubPos, time } from '../../index';
-import { Camera } from 'src/camera';
+import { Camera } from '../../camera';
 
 export class ScreenFilter extends Filter {
     constructor() {

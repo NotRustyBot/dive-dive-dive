@@ -1,7 +1,7 @@
 import { commonDatatype } from "./component";
 import { AutoView, Datagram, datatype } from "./datagram";
 import { headerId } from "./netManager";
-import { Vector } from "./types";
+import { Vector, Vectorlike } from "./types";
 
 export enum messageType {
     tick = 2,
@@ -11,9 +11,24 @@ export enum messageType {
     partActivity = 6,
     partActivityLinked = 7,
     objectLink = 8,
+    partActivityPositioned = 9,
+    partActivityLinkedPositioned = 10,
+    actionFailed = 11,
+    actionFailedLinked = 12
 }
 
-export type netMessage = tickMessage | untrackObjectMessage | debugCamMessage | debugCamPositionMessage | partActivityMessage | partActivityLinkedMessage | objectLinkMessage;
+export type netMessage =
+    | tickMessage
+    | untrackObjectMessage
+    | debugCamMessage
+    | debugCamPositionMessage
+    | partActivityMessage
+    | partActivityLinkedMessage
+    | objectLinkMessage
+    | partActivityLinkedMessage
+    | partActivityLinkedPositionedMessage
+    | actionFailedMessage
+    | actionFailedLinkedMessage
 
 type tickMessage = {
     typeId: messageType.tick;
@@ -54,6 +69,33 @@ type objectLinkMessage = {
     linkId: number;
 };
 
+type partActivityPositionedMessage = {
+    typeId: messageType.partActivityPositioned;
+    objectId: number;
+    position: Vectorlike;
+    action: number;
+};
+
+type partActivityLinkedPositionedMessage = {
+    typeId: messageType.partActivityLinkedPositioned;
+    objectId: number;
+    position: Vectorlike;
+    linkId: number;
+    action: number;
+};
+
+type actionFailedMessage = {
+    typeId: messageType.actionFailed;
+    text: string
+};
+
+type actionFailedLinkedMessage = {
+    typeId: messageType.actionFailedLinked;
+    text: string
+    linkId: number;
+};
+
+
 const messageIdDataType = datatype.uint8;
 
 export class Message {
@@ -90,6 +132,28 @@ export class Message {
             typeId: messageIdDataType,
             linkId: commonDatatype.objectId,
             netId: commonDatatype.objectId,
+        }),
+        [messageType.partActivityPositioned]: new Datagram().append<partActivityPositionedMessage>({
+            typeId: messageIdDataType,
+            action: datatype.uint8,
+            position: datatype.vector32,
+            objectId: commonDatatype.objectId,
+        }),
+        [messageType.partActivityLinkedPositioned]: new Datagram().append<partActivityLinkedPositionedMessage>({
+            typeId: messageIdDataType,
+            action: datatype.uint8,
+            position: datatype.vector32,
+            objectId: commonDatatype.objectId,
+            linkId: commonDatatype.objectId,
+        }),
+        [messageType.actionFailed]: new Datagram().append<actionFailedMessage>({
+            typeId: messageIdDataType,
+            text: datatype.string
+        }),
+        [messageType.actionFailedLinked]: new Datagram().append<actionFailedLinkedMessage>({
+            typeId: messageIdDataType,
+            text: datatype.string,
+            linkId: commonDatatype.objectId,
         }),
     };
     static write<T extends netMessage>(view: AutoView, data: T) {
