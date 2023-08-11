@@ -103,7 +103,7 @@ export class DevAttach {
     }
 
     ["draw"](dt: number) {
-        if(this.drawable && this.drawable.sprite.destroyed) this.drawable = undefined;
+        if (this.drawable && this.drawable.sprite.destroyed) this.drawable = undefined;
 
         if (!this.hitbox) this.hitbox = this.parent.getComponentByType(Hitbox);
         if (!this.hitbox) this.hitbox = this.parent.getComponentByType(DynamicHitbox);
@@ -136,16 +136,24 @@ export class DevAttach {
         }
     }
 
+    static serverTicks = 0;
+    static sendBuffer = 0;
     static ["draw"](dt: number) {
         DevAttach.container.position.set(Camera.position.x * Camera.scale, Camera.position.y * Camera.scale);
         DevAttach.container.scale.set(Camera.scale);
 
-        if (ServerInfo.get() && ServerInfo.get().mode == serverMode.pause) {
-            this.playPauseButton.classList.remove("on");
-            this.playPauseButton.classList.add("off");
-        } else {
-            this.playPauseButton.classList.remove("off");
-            this.playPauseButton.classList.add("on");
+        if (ServerInfo.get()) {
+            this.serverTicks = (this.serverTicks * 19 + ServerInfo.get().tickTime) / 20;
+            this.sendBuffer = (this.sendBuffer * 19 + ServerInfo.get().sendBuffer) / 20;
+            document.getElementById("server-ticks").innerHTML = ((this.serverTicks / 50) * 100).toFixed(1) + "% " + (this.sendBuffer/1000).toFixed(1) + "k";
+
+            if (ServerInfo.get().mode == serverMode.pause) {
+                this.playPauseButton.classList.remove("on");
+                this.playPauseButton.classList.add("off");
+            } else {
+                this.playPauseButton.classList.remove("off");
+                this.playPauseButton.classList.add("on");
+            }
         }
     }
 

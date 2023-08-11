@@ -1,6 +1,22 @@
 import { AutoView } from "@shared/datagram";
 import { Connector } from "./connector";
-import { Assemblies, BeaconDeployerPart, DynamicHitbox, Hitbox, MarkerDetector, Message, NetManager, ObjectScope, Physics, PhysicsDrawable, ServerInfo, SubControl, SubmarineBehaviour, Sync, Transform } from "./registry";
+import {
+    Assemblies,
+    BeaconDeployerPart,
+    DynamicHitbox,
+    Hitbox,
+    MarkerDetector,
+    Message,
+    NetManager,
+    ObjectScope,
+    Physics,
+    PhysicsDrawable,
+    ServerInfo,
+    SubControl,
+    SubmarineBehaviour,
+    Sync,
+    Transform,
+} from "./registry";
 import { Layer } from "@shared/physics/chunks";
 import { headerId } from "@shared/netManager";
 import { Vector } from "@shared/types";
@@ -107,6 +123,8 @@ export function createSubmarine(client: Client) {
 const tps = 20;
 const sendView = new AutoView(new ArrayBuffer(1000000));
 setInterval(() => {
+    const tim = performance.now();
+    
     const serverInfo = ServerInfo.get();
     if (serverInfo.mode == serverMode.update || (serverInfo.mode == serverMode.pause && serverInfo.tick == 1)) {
         const dt = 1 / tps;
@@ -129,7 +147,7 @@ setInterval(() => {
     }
 
     const bindex = sendView.index;
-
+    let maxIndex = bindex;
     for (const [_, client] of connector.clients) {
         sendView.index = bindex;
         if (serverInfo.tick != 0) Message.write(sendView, { typeId: messageType.tick });
@@ -137,9 +155,13 @@ setInterval(() => {
         client.writeMessages(sendView);
         client.writeObjects(sendView);
         client.send(sendView);
+        maxIndex = Math.max(sendView.index, maxIndex);
     }
 
     if (serverInfo.tick == 1) serverInfo.tick = 0;
+    serverInfo.sendBuffer = maxIndex;
+    serverInfo.tickTime = performance.now() - tim;
+    serverInfo.invalidateCache();
 }, 1000 / tps);
 
 export function clearAll() {
