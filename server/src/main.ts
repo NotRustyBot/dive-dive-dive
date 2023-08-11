@@ -83,6 +83,7 @@ export function createSubmarine(client: Client) {
     hitbox.poke = [submarineLayer];
     net.authorize([submarine, transform, drawable, physics]);
     net.authorize([control], client.id);
+    net.exclusivity([control], client.id);
     detector.subscribe(client);
     detector.range = new Vector(4000, 4000);
     physics.init();

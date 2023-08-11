@@ -31,7 +31,7 @@ export class SubmarineBehaviour extends NetComponent {
     hitbox!: Hitbox;
     buoyancy = 0;
     cargoWeight = 0;
-    stats: SubStats;
+    stats = new SubStats({});
     ballastWater = 0;
     leakWater = 0;
     leaking = 0;

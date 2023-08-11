@@ -39,7 +39,9 @@ export class Sync extends NetComponent {
         authority: datatype.uint32,
         id: commonDatatype.compId,
     });
-    cache = new Map<number, Map<number, ComponentCacheInfo>>();
+    private cache = new Map<number, Map<number, ComponentCacheInfo>>();
+    private exclusive = new Map<NetComponent, Set<number>>();
+
     get identity(): number {
         return SyncManager.identity;
     }
@@ -64,6 +66,14 @@ export class Sync extends NetComponent {
         }
     }
 
+    exclusivity(components: NetComponent[], authority?: number) {
+        const auth = authority ?? this.identity;
+        for (const component of components) {
+            if (!this.exclusive.get(component)) this.exclusive.set(component, new Set());
+            this.exclusive.get(component).add(auth);
+        }
+    }
+
     clearCache(identity: number) {
         this.cache.delete(identity);
     }
@@ -76,6 +86,8 @@ export class Sync extends NetComponent {
         let actualSize = 0;
         view.writeUint8(caches.size);
         for (const [id, cache] of caches) {
+            const exclusivity = this.exclusive.get(cache.component);
+            if (target && exclusivity && !exclusivity.has(target)) continue;
             if (!target || cache.needsUpdate(target)) {
                 cache.component.writeBits(view);
                 actualSize++;
@@ -92,12 +104,18 @@ export class Sync extends NetComponent {
         return true;
     }
 
-    writeAllBits(view: AutoView) {
+    writeAllBits(view: AutoView, target?: number) {
         this.parent.writeHeaderBits(view, ObjectScope.network);
+        const index = view.index;
         view.writeUint8(this.parent.netComponents.size);
+        let actualSize = 0;
         for (const [id, comp] of this.parent.netComponents) {
+            const exclusivity = this.exclusive.get(comp);
+            if (target && exclusivity && !exclusivity.has(target)) continue;
             comp.writeBits(view);
+            actualSize++;
         }
+        view.setUint8(index, actualSize);
     }
 
     static resolveBits(view: AutoView, links?: Map<number, number>) {
@@ -109,7 +127,7 @@ export class Sync extends NetComponent {
             if (links && links.has(data.id)) {
                 parent = ObjectScope.game.getObject(links.get(data.id));
                 parent.clearComponents();
-                links.delete(data.id)
+                links.delete(data.id);
                 ObjectScope.network.setObject(parent, data.id);
             } else {
                 parent = ObjectScope.game.createObject();
@@ -144,7 +162,10 @@ export class Sync extends NetComponent {
         super.fromSerialisable(data);
         for (const comp of data.components) {
             if (!this.cache.has(comp.authority)) this.cache.set(comp.authority, new Map());
-            if (!this.cache.get(comp.authority).has(comp.id)) this.cache.get(comp.authority).set(comp.id, new ComponentCacheInfo(this.parent.getComponent(comp.id)));
+            if (!this.cache.get(comp.authority).has(comp.id)) {
+                const properComp: NetComponent = this.parent.getComponent(comp.id);
+                if (properComp) this.cache.get(comp.authority).set(comp.id, new ComponentCacheInfo(properComp));
+            }
         }
         this.considerLocalAuthority();
     }

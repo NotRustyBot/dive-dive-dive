@@ -10,12 +10,12 @@ import { IMouseHandler, UI } from "ui/uiHandler";
 import { Vectorlike } from "@shared/types";
 import { Camera } from "camera";
 import { Sprite } from "pixi.js";
-import {  worldUiLayer } from "index";
+import { worldUiLayer } from "index";
 
 export class BeaconDeployerPart extends MockBeaconDeployerPart implements IMouseHandler {
     sprite: Sprite;
     override ["deploy-beacon"](): void {
-        UI.useMouseHandler(this);
+        if (!UI.useMouseHandler(this)) return;
         UI.setHintText("click to place beacon");
         this.sprite = Sprite.from("/assets/beacon.png");
         this.sprite.alpha = 0.5;

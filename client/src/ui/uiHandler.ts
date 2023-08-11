@@ -37,9 +37,11 @@ export class UI {
     static useMouseHandler(mouseHandler: IMouseHandler) {
         if (mouseHandler == this.mouseHandler) {
             this.clearHandler();
+            return false;
         } else {
             this.mouseHandler = mouseHandler;
         }
+        return true;
     }
 
     static clearHandler() {
