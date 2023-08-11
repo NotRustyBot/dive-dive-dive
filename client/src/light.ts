@@ -2,7 +2,7 @@ import { Container, Sprite, Texture } from "pixi.js";
 import { Light as MockLight, SerialisedLightComponent } from "@shared/mock/light";
 import { BaseObject } from "@shared/baseObject";
 import { ObjectScope } from "@shared/objectScope";
-import { lightsLayer, time } from "src";
+import { lightsLayer, time } from "./index";
 import { Camera } from "./camera";
 
 export class Light extends MockLight {

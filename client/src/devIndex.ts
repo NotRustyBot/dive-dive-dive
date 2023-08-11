@@ -2,10 +2,10 @@ import { ObjectScope } from "@shared/objectScope";
 import { BaseObject } from "@shared/baseObject";
 console.log("dev enabled");
 
-import html from "./devhtml/screen.html";
-document.body.innerHTML = html;
-
+import html from "./dev/screen.html";
+document.body.innerHTML += html;
 import { app } from "./index";
+
 import { DevAttach } from "./dev/devDebugAttach";
 import { Camera } from "./camera";
 import { DevControl, InteractionMode, interactionMode } from "./dev/devControls";

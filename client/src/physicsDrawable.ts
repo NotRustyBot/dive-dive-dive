@@ -4,7 +4,7 @@ import { Physics } from "@shared/physics";
 import { ObjectScope } from "@shared/objectScope";
 import { PhysicsDrawable as MockPhysicsDrawable } from "@shared/mock/physicsDrawable";
 import { Sprite, Texture } from "pixi.js";
-import { addChildByType, entityLayer } from "src";
+import { addChildByType, entityLayer } from "./index";
 
 
 export class PhysicsDrawable extends MockPhysicsDrawable {

@@ -125,6 +125,28 @@ registerFactory("terrain", (v) => {
     return terrain;
 });
 
+registerFactory("terrain2", (v) => {
+    const terrain = ObjectScope.game.createObject();
+    const transform = terrain.addComponent(Transform);
+    const drawable = terrain.addComponent(Drawable);
+    const hitbox = terrain.addComponent(Hitbox);
+    const sync = terrain.addComponent(Sync);
+    const detectable = terrain.addComponent(RangeDetectable);
+    hitbox.sides = new Vector(440, 440);
+    drawable.url = "/assets/terrain2.png";
+    drawable.extra = drawableExtra.terrain;
+    hitbox.poke = [terrainLayer];
+    transform.position.set(v.x, v.y);
+    sync.authorize([transform]);
+    transform.init();
+    drawable.init();
+    hitbox.init();
+    sync.init();
+    detectable.init();
+    ObjectScope.network.scopeObject(terrain);
+    return terrain;
+});
+
 registerFactory("image", (v) => {
     const image = ObjectScope.game.createObject();
     const transform = image.addComponent(Transform);
@@ -157,6 +179,7 @@ registerFactory("fish", (v) => {
     hitbox.sides = new Vector(22, 22);
     hitbox.peek = [submarineLayer, terrainLayer];
     behaviour.hitbox = hitbox;
+    glow.tint = 0x66ff99;
     drawable.url = "/assets/fish.png";
     drawable.physics = physics;
     drawable.extra = drawableExtra.background;
@@ -174,26 +197,42 @@ registerFactory("fish", (v) => {
     return fish;
 });
 
-registerFactory("beacon", (v) => {
+registerFactory("grass", (v) => {
     const image = ObjectScope.game.createObject();
     const transform = image.addComponent(Transform);
     const drawable = image.addComponent(Drawable);
     const sync = image.addComponent(Sync);
-    const glow = image.addComponent(Light);
+    const glow1 = image.addComponent(Light);
+    const glow2 = image.addComponent(Light);
+    const glow3 = image.addComponent(Light);
     const detectable = image.addComponent(RangeDetectable);
-    drawable.url = "/assets/beacon.png";
+    drawable.url = "/assets/grass.png";
     drawable.extra = drawableExtra.background;
     transform.position.set(v.x, v.y);
     transform.init();
-    glow.offset.y = -45;
-    glow.range = 100;
-    glow.intensity = 3;
-    glow.extra = 1;
-    glow.tint = 0xff8888;
+    glow1.offset.y = -78;
+    glow1.offset.x = 5;
+    glow1.range = 50;
+    glow1.intensity = 1;
+    glow1.tint = 0x99ccff;
+
+    glow2.offset.y = -80;
+    glow2.offset.x = -30;
+    glow2.range = 50;
+    glow2.intensity = 1;
+    glow2.tint = 0x99ccff;
+
+    glow3.offset.y = -75;
+    glow3.offset.x = 45;
+    glow3.range = 50;
+    glow3.intensity = 1;
+    glow3.tint = 0x99ccff;
     sync.authorize([transform, drawable]);
     drawable.init();
     sync.init();
-    glow.init();
+    glow1.init();
+    glow2.init();
+    glow3.init();
     detectable.init();
     ObjectScope.network.scopeObject(image);
     return image;

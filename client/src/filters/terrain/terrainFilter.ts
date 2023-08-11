@@ -3,7 +3,7 @@ import type { FilterSystem, RenderTexture, CLEAR_MODES } from '@pixi/core';
 import vertex from './terrain.vert';
 import fragment from './terrain.frag';
 import { currentSubPos, time } from '../../index';
-import { Camera } from 'src/camera';
+import { Camera } from '../../camera';
 
 export class TerrainFilter extends Filter {
     constructor() {

@@ -12,9 +12,11 @@
 body {
     margin: 0;
     overflow: hidden;
+    touch-action: none;
 }
 
 .dev {
+    z-index: 100;;
     position: absolute;
     top: 0;
     width: 100%;
@@ -22,8 +24,11 @@ body {
     font-family: "Courier New", Courier, monospace;
     display: flex;
     flex-direction: column;
+    pointer-events: none;
 }
-
+.dev > * {
+    pointer-events: all;
+}
 .dev-preferences {
     display: flex;
     flex-direction: column;
