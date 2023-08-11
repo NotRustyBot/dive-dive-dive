@@ -75,7 +75,7 @@ export class Client {
                 const serialised = sync.writeAuthorityBits(view, this.id);
                 if (serialised) actualSize++;
             } else {
-                sync.writeAllBits(view);
+                sync.writeAllBits(view, this.id);
                 tracked.initialised = true;
                 actualSize++;
             }
