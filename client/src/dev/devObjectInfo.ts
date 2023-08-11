@@ -107,6 +107,7 @@ export class DevComponentInfo {
         this.container.appendChild(identity);
         this.container.appendChild(this.head);
         this.textarea = document.createElement("textarea");
+        this.textarea.spellcheck = false;
         this.textarea.value = JSON.stringify(this.comp.toSerialisable(), null, 2);
         this.textarea.style.height = this.textarea.value.split("\n").length * 16 + "px";
         this.container.appendChild(this.textarea);
