@@ -6,6 +6,8 @@ import { SerialisedComponent } from "./component";
 export type SerialisedServerInfo = {
     playerCount: number;
     mode: number;
+    tickTime: number;
+    sendBuffer: number;
 }
 
 export type SerialisedServerInfoComponent = SerialisedServerInfo & SerialisedComponent;
@@ -18,6 +20,8 @@ export enum serverMode {
 export class ServerInfo extends NetComponent {
 
     private _playerCount = 0;
+    tickTime = 0;
+    sendBuffer = 0;
 
     public get playerCount(): number {
         return this._playerCount
@@ -69,7 +73,9 @@ export class ServerInfo extends NetComponent {
         super.datagramDefinition();
         this.datagram = this.datagram.cloneAppend<SerialisedServerInfo>({
             mode: datatype.uint8,
-            playerCount: datatype.uint16
+            playerCount: datatype.uint16,
+            tickTime: datatype.float32,
+            sendBuffer: datatype.uint32,
         });
         this.cacheSize = 0;
     }
@@ -78,6 +84,8 @@ export class ServerInfo extends NetComponent {
         const data = super.toSerialisable() as SerialisedServerInfoComponent;
         data.mode = this._mode;
         data.playerCount = this._playerCount;
+        data.tickTime = this.tickTime;
+        data.sendBuffer = this.sendBuffer;
         return data;
     }
 
@@ -85,6 +93,8 @@ export class ServerInfo extends NetComponent {
         super.fromSerialisable(data);
         this.mode = data.mode;
         this.playerCount = data.playerCount;
+        this.tickTime = data.tickTime;
+        this.sendBuffer = data.sendBuffer;
     }
 }
 
