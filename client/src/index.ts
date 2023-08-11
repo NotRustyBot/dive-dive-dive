@@ -47,12 +47,14 @@ export const backgroundLayer = new PIXI.Container();
 export const terrainLayer = new PIXI.Container();
 export const entityLayer = new PIXI.Container();
 export const lightsLayer = new PIXI.Container();
+export const worldUiLayer = new PIXI.Container();
 export const uiLayer = new PIXI.Container();
 realLayer.addChild(backgroundLayer);
 realLayer.addChild(terrainLayer);
 realLayer.addChild(entityLayer);
 worldLayer.addChild(realLayer);
 worldLayer.addChild(lightsLayer);
+worldLayer.addChild(worldUiLayer);
 
 app.stage.addChild(worldLayer);
 app.stage.addChild(uiLayer);
@@ -109,11 +111,11 @@ app.ticker.add((dt) => {
         Camera.glide(SubControl.current.submarine.parent.position);
     }
 
-    if (keys["+"]) {
+    if (keys["-"]) {
         Camera.scale *= 0.99;
     }
 
-    if (keys["-"]) {
+    if (keys["+"]) {
         Camera.scale /= 0.99;
     }
 

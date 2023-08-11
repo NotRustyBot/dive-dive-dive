@@ -6,17 +6,47 @@ import { Container, Sprite, Text } from "pixi.js";
 import { uiLayer } from "index";
 import { Vector, Vectorlike } from "@shared/types";
 import { Camera } from "camera";
+import { mouse } from "control";
 
 type submarineAction = {
     image: string;
     name: string;
 };
 
+type mouseHandler = (position: Vectorlike, click: number) => void;
+
+export interface IMouseHandler {
+    handleMouse: mouseHandler;
+    cancelMouse: () => void;
+}
+
 export class UI {
     static actionButtons = new Array<UiAction>();
     static statsHtml: HTMLDivElement;
+    static hintHtml: HTMLParagraphElement;
     static get container(): Container {
         return uiLayer;
+    }
+
+    private static mouseHandler: IMouseHandler;
+
+    static setHintText(text = "") {
+        this.hintHtml.innerText = text;
+    }
+
+    static useMouseHandler(mouseHandler: IMouseHandler) {
+        if (mouseHandler == this.mouseHandler) {
+            this.clearHandler();
+        } else {
+            this.mouseHandler = mouseHandler;
+        }
+    }
+
+    static clearHandler() {
+        if (this.mouseHandler) {
+            this.mouseHandler.cancelMouse();
+            this.mouseHandler = undefined;
+        }
     }
 
     static get submarine(): SubmarineBehaviour {
@@ -27,12 +57,22 @@ export class UI {
         document.body.innerHTML += uiHtml;
         this.setActions([{ image: "/assets/beacon.png", name: "deploy-beacon" }]);
         this.statsHtml = document.getElementsByClassName("ui-stats")[0] as HTMLDivElement;
+        this.hintHtml = document.getElementsByClassName("action-hint")[0] as HTMLParagraphElement;
         ObjectScope.game.subscribe("draw", this);
     }
 
     static ["draw"]() {
         if (!SubControl.current) return;
         if (!this.submarine) return;
+        this.updateUI();
+        this.handleHandlers();
+    }
+
+    private static handleHandlers() {
+        if (this.mouseHandler) this.mouseHandler.handleMouse(mouse.position, mouse.clicked);
+    }
+
+    private static updateUI() {
         this.statsHtml.innerText = "";
         if (Math.abs(this.submarine.physics.velocity.x) < 0.2) {
             this.statsHtml.innerText += "stop\n--/--\n";
@@ -115,7 +155,7 @@ abstract class Marker {
         this.text = new Text(this.name, { fill: 0xffffff, fontSize: 36, align: "center" });
         this.sprite.anchor.set(0.5);
         this.text.anchor.set(0.5, 0);
-        this.text.position.set(0,36);
+        this.text.position.set(0, 36);
         this.sprite.scale.set(0.5);
         this.sprite.addChild(this.text);
         UI.container.addChild(this.sprite);
@@ -137,7 +177,7 @@ abstract class Marker {
         } else {
             distText = (dist / 10000).toFixed(1);
         }
-        this.text.text = (this.name ? this.name + "\n" : "");
+        this.text.text = this.name ? this.name + "\n" : "";
 
         if (dist * Camera.scale > maxDist) {
             vector.normalize().mult(maxDist);

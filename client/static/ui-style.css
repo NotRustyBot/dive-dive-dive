@@ -1,4 +1,5 @@
 .ui {
+    font-family: sans-serif;
     position: absolute;
     height: 100%;
     width: 100%;
@@ -49,8 +50,14 @@
 
 .ui-stats {
     background-color: #88ccff22;
-    font-family: sans-serif;
     color: #fff;
     width: 120px;
     height: 100px;
+}
+
+.action-hint{
+    position: absolute;
+    top: -20px;
+    color: #fff;
+    margin: 0;
 }

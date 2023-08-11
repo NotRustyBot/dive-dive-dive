@@ -114,8 +114,8 @@ export class SubmarineBehaviour extends NetComponent {
             for (const overlap of overlaps) {
                 let useOffset = new Vector();
                 const speed = this.physics.velocity.length();
-                if (speed > 0.5) {
-                    this.leaking += speed - 0.2;
+                if (speed > 1) {
+                    this.leaking += speed - 0.5;
                 }
                 if (Math.abs(overlap.offset.x) > Math.abs(overlap.offset.y)) {
                     useOffset.y = overlap.offset.y;
