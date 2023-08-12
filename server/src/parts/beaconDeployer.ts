@@ -32,13 +32,7 @@ export class BeaconDeployerPart extends MockBeaconDeployerPart {
             glow.extra = 1;
             glow.tint = 0xffaa88;
             sync.authorize([transform, drawable, marker, glow]);
-            transform.init();
-            drawable.init();
-            sync.init();
-            glow.init();
-            detectable.init();
-            markerDetectable.init();
-            marker.init();
+            beacon.initialiseComponents();
             ObjectScope.network.scopeObject(beacon);
             data.client.message({ typeId: messageType.objectLink, netId: beacon.getId(ObjectScope.network), linkId: data.gameId });
         } else {

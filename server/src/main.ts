@@ -106,17 +106,7 @@ export function createSubmarine(client: Client) {
     net.exclusivity([control], client.id);
     detector.subscribe(client);
     detector.range = new Vector(4000, 4000);
-    physics.init();
-    hitbox.init();
-    control.init();
-    markerDetector.init();
-    drawable.init();
-    net.init();
-    submarine.init();
-    detector.init();
-    assemblies.init();
-    detectable.init();
-    beaconDeployer.init();
+    sub.initialiseComponents();
     ObjectScope.network.scopeObject(sub);
     clientSubs.set(client.id, submarine);
     return sub;
