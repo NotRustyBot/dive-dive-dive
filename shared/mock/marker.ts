@@ -35,9 +35,9 @@ export class Marker extends NetComponent {
     }
 
     override fromSerialisable(data: SerialisedMarkerComponent) {
+        super.fromSerialisable(data);
         this.range = data.range;
         this.tint = data.tint;
         this.name = data.name;
-        super.fromSerialisable(data);
     }
 }

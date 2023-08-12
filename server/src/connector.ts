@@ -3,7 +3,7 @@ import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/
 import { AutoView } from "@shared/datagram";
 import { Message, ObjectScope, ServerInfo, SubmarineBehaviour, Sync, Transform } from "./registry";
 import { Client } from "./client";
-import { createSubmarine } from "./main";
+import { DEV_MODE, createSubmarine } from "./main";
 import { Detector } from "./server/detector";
 import { messageType, netMessage } from "@shared/messages";
 import { RangeDetector } from "./server/rangeDetector";
@@ -25,8 +25,6 @@ export class Connector {
     }
 
     start() {
-        console.log("listening ...");
-
         this.websocket.on("connection", (clientSocket) => {
             try {
                 clientSocket.addListener("message", (message: Buffer) => {
@@ -80,7 +78,11 @@ export class Connector {
                             case headerId.objects:
                                 const count = autoview.readUint16();
                                 for (let i = 0; i < count; i++) {
-                                    Sync.resolveBits(autoview);
+                                    if (DEV_MODE) {
+                                        Sync.resolveBits(autoview);
+                                    } else {
+                                        Sync.resolveUntrustedBits(autoview, this.clients.get(clientSocket).id);
+                                    }
                                 }
                                 break;
                             case headerId.message:
@@ -108,7 +110,7 @@ export class Connector {
                 break;
 
             case messageType.debugCamPosition:
-                if (client.debugCam) {
+                if (client.debugCam && DEV_MODE) {
                     const rangeDetector = client.debugCam.getComponentByType(RangeDetector);
                     rangeDetector.range = msg.range.mult(0.5);
                     client.debugCam.position.set(msg.position.x, msg.position.y);
@@ -123,7 +125,7 @@ export class Connector {
                     const object = ObjectScope.network.getObject(msg.objectId);
                     const subBehaviour = object.getComponentByType(SubmarineBehaviour);
                     if (subBehaviour.owner == client.id) {
-                        if (msg.action == partActions.deployBeacon) subBehaviour.commands.fire("deploy-beacon", {gameId: msg.linkId, client, position: msg.position});
+                        if (msg.action == partActions.deployBeacon) subBehaviour.commands.fire("deploy-beacon", { gameId: msg.linkId, client, position: msg.position });
                     }
                 }
                 break;

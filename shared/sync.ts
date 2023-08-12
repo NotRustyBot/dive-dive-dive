@@ -66,6 +66,12 @@ export class Sync extends NetComponent {
         }
     }
 
+    hasAuthority(component: SerialisedComponent, authority?: number) {
+        const auth = authority ?? this.identity;
+        if (!this.cache.get(auth)) return false;
+        return this.cache.get(auth).has(component.id);
+    }
+
     exclusivity(components: NetComponent[], authority?: number) {
         const auth = authority ?? this.identity;
         for (const component of components) {
@@ -138,6 +144,31 @@ export class Sync extends NetComponent {
         for (let i = 0; i < compCount; i++) {
             const compData = NetComponent.dataFromBits(view);
             data.componentData.push(compData);
+        }
+
+        parent.applyData(data as SerialisedBaseObject);
+        return parent;
+    }
+
+    static resolveUntrustedBits(view: AutoView, sender: number) {
+        const data = BaseObject.getHeaderFromBits(view) as SerialisedBaseObject;
+        let parent = ObjectScope.network.getObject(data.id);
+        data.componentData = [];
+        const compCount = view.readUint8();
+        if (!parent) {
+            parent = ObjectScope.game.createObject();
+            ObjectScope.network.setObject(parent, data.id);
+        }
+
+        const sync = parent.getComponentByType(Sync);
+
+        for (let i = 0; i < compCount; i++) {
+            const compData = NetComponent.dataFromBits(view);
+            if (sync.hasAuthority(compData, sender)) {
+                data.componentData.push(compData);
+            } else {
+                console.warn("unauthorized data from " + sender);
+            }
         }
 
         parent.applyData(data as SerialisedBaseObject);
