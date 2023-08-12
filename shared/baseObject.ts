@@ -6,15 +6,15 @@ import { Component, Serialisable, SerialisedComponent } from "./component";
 import { NetComponent } from "./netComponent";
 
 export type SerialisedBaseObject = {
-    id: number,
-    componentIndex: number,
-    componentData: Array<SerialisedComponent>,
-} & Serialisable
+    id: number;
+    componentIndex: number;
+    componentData: Array<SerialisedComponent>;
+} & Serialisable;
 
 export type SerialisedBaseObjectHeader = {
-    componentIndex: number,
-    id: number,
-}
+    componentIndex: number;
+    id: number;
+};
 
 export class BaseObject {
     static objectDatagram = new Datagram().append<SerialisedBaseObjectHeader>({
@@ -150,6 +150,12 @@ export class BaseObject {
 
         for (const component of createdComps) {
             component.init();
+        }
+    }
+
+    initialiseComponents() {
+        for (const [id, comp] of this.components) {
+            comp.init();
         }
     }
 }
