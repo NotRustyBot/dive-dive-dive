@@ -4,6 +4,7 @@ import { bbid } from "./bbid";
 import { Vectorlike } from "./types";
 import { Component, SerialisedComponent } from "./component";
 
+
 export class NetComponent extends Component {
 
     get datagram(): Datagram {

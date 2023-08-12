@@ -29,10 +29,14 @@ import { RangeDetector } from "./server/rangeDetector";
 import { RangeDetectable } from "./server/rangeDetectable";
 import { Client } from "./client";
 import { drawableExtra } from "@shared/mock/drawable";
+import { startContentServer } from "./contentServe";
+
+export const DEV_MODE = !!process.env.dev;
 
 initCommon();
 
-startDevServer();
+startContentServer();
+if (DEV_MODE) startDevServer();
 NetManager.initDatagrams();
 NetManager.identity = 0;
 export const connector = new Connector();
@@ -115,8 +119,6 @@ export function createSubmarine(client: Client) {
     beaconDeployer.init();
     ObjectScope.network.scopeObject(sub);
     clientSubs.set(client.id, submarine);
-    console.log(submarine.stats);
-
     return sub;
 }
 
@@ -124,7 +126,7 @@ const tps = 20;
 const sendView = new AutoView(new ArrayBuffer(1000000));
 setInterval(() => {
     const tim = performance.now();
-    
+
     const serverInfo = ServerInfo.get();
     if (serverInfo.mode == serverMode.update || (serverInfo.mode == serverMode.pause && serverInfo.tick == 1)) {
         const dt = 1 / tps;

@@ -37,9 +37,6 @@ export class Assemblies extends NetComponent {
             this.submarine.stats.addAssembly(assembly);
         }
         this.invalidateCache();
-        console.log("topX", this.submarine.stats.topSpeed());
-        console.log("topU", this.submarine.stats.maxRise());
-        console.log("topD", this.submarine.stats.maxSink());
     }
 
     override toSerialisable(): SerialisedAssembliesComponent {

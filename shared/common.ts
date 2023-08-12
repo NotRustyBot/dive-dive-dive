@@ -12,7 +12,6 @@ export function initCommon() {
     submarineLayer = new Layer();
 
     defineParts();
-    console.log(SubmarinePart.get(partTypes.smallHovHull));
 }
 
 export enum partSlot {

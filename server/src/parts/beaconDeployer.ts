@@ -31,7 +31,7 @@ export class BeaconDeployerPart extends MockBeaconDeployerPart {
             glow.intensity = 3;
             glow.extra = 1;
             glow.tint = 0xffaa88;
-            sync.authorize([transform, drawable]);
+            sync.authorize([transform, drawable, marker, glow]);
             transform.init();
             drawable.init();
             sync.init();
