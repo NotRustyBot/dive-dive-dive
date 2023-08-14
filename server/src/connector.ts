@@ -101,11 +101,20 @@ export class Connector {
     parseMessage(msg: netMessage, client: Client) {
         switch (msg.typeId) {
             case messageType.debugCam:
-                if (msg.enabled) {
-                    client.debugCam = createDebugCam(client);
-                } else {
-                    client.debugCam.remove();
-                    client.debugCam = undefined;
+                if (DEV_MODE) {
+                    if (msg.enabled) {
+                        client.debugCam = createDebugCam(client);
+                    } else {
+                        client.debugCam.remove();
+                        client.debugCam = undefined;
+                    }
+                }
+                break;
+
+            case messageType.devDelete:
+                if (DEV_MODE) {
+                    const object = ObjectScope.network.getObject(msg.objectId);
+                    object.remove();
                 }
                 break;
 
@@ -118,7 +127,6 @@ export class Connector {
                 break;
 
             case messageType.partActivity:
-                
                 const object = ObjectScope.network.getObject(msg.objectId);
                 const subBehaviour = object.getComponentByType(SubmarineBehaviour);
                 if (subBehaviour.owner == client.id) {

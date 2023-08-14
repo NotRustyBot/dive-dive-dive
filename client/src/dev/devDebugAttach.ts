@@ -13,6 +13,7 @@ import { InteractionMode, interactionMode } from "./devControls";
 import { Network } from "../network";
 import { Sync } from "@shared/sync";
 import { keys } from "../control";
+import { messageType } from "@shared/messages";
 
 export class DevAttach {
     static container = new Container();
@@ -115,6 +116,7 @@ export class DevAttach {
             alpha = 1;
             this.ui.refresh();
         }
+
         if (!DevAttach.drawDebug) return;
 
         if (this.hitbox) {
@@ -142,10 +144,22 @@ export class DevAttach {
         DevAttach.container.position.set(Camera.position.x * Camera.scale, Camera.position.y * Camera.scale);
         DevAttach.container.scale.set(Camera.scale);
 
+        if (this.selected && keys["Delete"]) {
+            const netId = this.selected.parent.getId(ObjectScope.network);
+            if (netId) {
+                Network.message({
+                    typeId: messageType.devDelete,
+                    objectId: netId
+                });
+            }
+            this.selected.parent.remove();
+            this.selected = undefined;
+        }
+
         if (ServerInfo.get()) {
             this.serverTicks = (this.serverTicks * 19 + ServerInfo.get().tickTime) / 20;
             this.sendBuffer = (this.sendBuffer * 19 + ServerInfo.get().sendBuffer) / 20;
-            document.getElementById("server-ticks").innerHTML = ((this.serverTicks / 50) * 100).toFixed(1) + "% " + (this.sendBuffer/1000).toFixed(1) + "k";
+            document.getElementById("server-ticks").innerHTML = ((this.serverTicks / 50) * 100).toFixed(1) + "% " + (this.sendBuffer / 1000).toFixed(1) + "k";
 
             if (ServerInfo.get().mode == serverMode.pause) {
                 this.playPauseButton.classList.remove("on");
