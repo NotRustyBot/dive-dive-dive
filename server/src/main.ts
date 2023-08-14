@@ -1,6 +1,7 @@
 import { AutoView } from "@shared/datagram";
 import { Connector } from "./connector";
 import {
+    ActiveSonarPart,
     Assemblies,
     BeaconDeployerPart,
     DynamicHitbox,
@@ -34,7 +35,6 @@ import { startContentServer } from "./contentServe";
 export const DEV_MODE = !!process.env.dev;
 
 initCommon();
-
 startContentServer();
 if (DEV_MODE) startDevServer();
 NetManager.initDatagrams();
@@ -78,10 +78,7 @@ export function createSubmarine(client: Client) {
     const detector = sub.addComponent(RangeDetector);
     const detectable = sub.addComponent(RangeDetectable);
     const assemblies = sub.addComponent(Assemblies);
-    const beaconDeployer = sub.addComponent(BeaconDeployerPart);
     const markerDetector = sub.addComponent(MarkerDetector);
-    beaconDeployer.submarine = submarine;
-    beaconDeployer.count = 1;
     control.submarine = submarine;
     submarine.physics = physics;
     submarine.owner = client.id;
@@ -94,8 +91,12 @@ export function createSubmarine(client: Client) {
         { part: SubmarinePart.get(partTypes.basicPump), count: 1 },
         { part: SubmarinePart.get(partTypes.battery), count: 5 },
         { part: SubmarinePart.get(partTypes.beaconDeployer), count: 1 },
+        { part: SubmarinePart.get(partTypes.sonar), count: 1 },
+        { part: SubmarinePart.get(partTypes.floodlight), count: 1 },
     ];
     assemblies.submarine = submarine;
+    assemblies.rangeDetector = detector;
+    assemblies.attachParts();
     hitbox.sides = new Vector(250, 100);
     drawable.url = "/assets/brandy.png";
     drawable.extra = drawableExtra.entity;
@@ -105,7 +106,6 @@ export function createSubmarine(client: Client) {
     net.authorize([control], client.id);
     net.exclusivity([control], client.id);
     detector.subscribe(client);
-    detector.range = new Vector(4000, 4000);
     sub.initialiseComponents();
     ObjectScope.network.scopeObject(sub);
     clientSubs.set(client.id, submarine);

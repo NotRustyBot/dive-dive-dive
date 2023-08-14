@@ -17,6 +17,9 @@ export class SubStats {
     battery = 0;
     ballastPumpCost = 0;
     engineCost = 0;
+    lightPower = 0;
+    sonarPower = 0;
+    passiveDraw = 0;
 
 
     constructor(data: SubStatsData) {
@@ -48,20 +51,37 @@ export class SubStats {
 
     addAssembly(assembly: SubmarineAssembly) {
         const other = assembly.part.modification;
-        this.weight += other.weight * assembly.count;
-        this.volume += other.volume * assembly.count;
-        this.ballastVolume += other.ballastVolume * assembly.count;
-        this.diameter += other.diameter * assembly.count;
-        this.length += other.length * assembly.count;
-        this.engine += other.engine * assembly.count;
-        this.roughness += other.roughness * assembly.count;
-        this.ballastPumpRate += other.ballastPumpRate * assembly.count;
-        this.leakPumpRate += other.leakPumpRate * assembly.count;
-        this.space += other.space * assembly.count;
-        this.battery += other.battery;
-        this.ballastPumpCost += other.ballastPumpCost;
-        this.engineCost += other.engineCost;
+        return this.addProperties(other, assembly.count)
     }
+
+    addProperties(other: SubStats, count = 1){
+        this.weight += other.weight * count;
+        this.volume += other.volume * count;
+        this.ballastVolume += other.ballastVolume * count;
+        this.diameter += other.diameter * count;
+        this.length += other.length * count;
+        this.engine += other.engine * count;
+        this.roughness += other.roughness * count;
+        this.ballastPumpRate += other.ballastPumpRate * count;
+        this.leakPumpRate += other.leakPumpRate * count;
+        this.space += other.space * count;
+        this.battery += other.battery * count;
+        this.ballastPumpCost += other.ballastPumpCost * count;
+        this.engineCost += other.engineCost * count;
+        this.lightPower += other.lightPower * count;
+        this.sonarPower = Math.max(this.sonarPower, other.sonarPower);
+        this.passiveDraw += other.passiveDraw * count;
+        return this;
+    }
+
+    sonarEffectiveRange(){
+        return this.sonarPower ** 0.5;
+    }
+
+    lightEffectiveRange(){
+        return this.lightPower ** 0.5;
+    }
+
     static newHull(radius: number, length: number, roughness: number, thickness = 0.05, desnity = 7.5) {
         const volume = Math.PI * radius ** 2 * length;
         const surface = Math.PI * radius * length * 2 + 2 * Math.PI * radius ** 2;

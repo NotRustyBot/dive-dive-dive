@@ -12,6 +12,7 @@ import { ServerInfo } from "@shared/serverInfo"
 import { FishBehaviour } from "@shared/fish"
 import { Assemblies } from "@shared/submarineAssemblies"
 import { BeaconDeployerPart } from "./parts/beaconDeployer"
+import { ActiveSonarPart } from "./parts/activeSonar"
 import { Marker } from "marker"
 
 
@@ -31,4 +32,5 @@ export function initModules(){
     FishBehaviour.initialise();
     Assemblies.initialise();
     BeaconDeployerPart.initialise();
+    ActiveSonarPart.initialise();
 }

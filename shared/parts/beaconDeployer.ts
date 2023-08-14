@@ -7,6 +7,8 @@ export type SerialisedBeaconDeployerPart = {};
 export type SerialisedBeaconDeployerPartComponent = SerialisedBeaconDeployerPart & SerialisedPartComponent;
 
 export class BeaconDeployerPart extends Part {
+    static override partType = partTypes.beaconDeployer;
+
     static override datagramDefinition(): void {
         super.datagramDefinition();
         this.datagram = this.datagram.cloneAppend<SerialisedBeaconDeployerPart>({});

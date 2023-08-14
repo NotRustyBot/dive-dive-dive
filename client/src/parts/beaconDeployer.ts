@@ -6,13 +6,14 @@ import { BeaconDeployerPart as MockBeaconDeployerPart } from "@shared/parts/beac
 import { Transform } from "@shared/transform";
 import { Drawable } from "../drawable";
 import { Network } from "../network";
-import { IMouseHandler, UI } from "ui/uiHandler";
+import { IMouseHandler, IUiPart, UI, UiAction } from "ui/uiHandler";
 import { Vectorlike } from "@shared/types";
 import { Camera } from "camera";
 import { Sprite } from "pixi.js";
 import { worldUiLayer } from "index";
 
-export class BeaconDeployerPart extends MockBeaconDeployerPart implements IMouseHandler {
+export class BeaconDeployerPart extends MockBeaconDeployerPart implements IMouseHandler, IUiPart {
+
     sprite: Sprite;
     override ["deploy-beacon"](): void {
         if (!UI.useMouseHandler(this)) return;
@@ -35,6 +36,10 @@ export class BeaconDeployerPart extends MockBeaconDeployerPart implements IMouse
         } else {
             this.sprite.tint = 0xff0000;
         }
+    }
+
+    updateUI(button: UiAction): void {
+        
     }
 
     cancelMouse() {
