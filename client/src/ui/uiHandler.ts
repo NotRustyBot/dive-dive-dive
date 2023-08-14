@@ -8,10 +8,15 @@ import { Vector, Vectorlike } from "@shared/types";
 import { Camera } from "camera";
 import { mouse } from "control";
 
-type submarineAction = {
+export type submarineAction = {
     image: string;
     name: string;
+    part?: IUiPart;
 };
+
+export interface IUiPart {
+    updateUI(button: UiAction): void;
+}
 
 type mouseHandler = (position: Vectorlike, click: number) => void;
 
@@ -57,7 +62,6 @@ export class UI {
 
     static init() {
         document.body.innerHTML += uiHtml;
-        this.setActions([{ image: "/assets/beacon.png", name: "deploy-beacon" }]);
         this.statsHtml = document.getElementsByClassName("ui-stats")[0] as HTMLDivElement;
         this.hintHtml = document.getElementsByClassName("action-hint")[0] as HTMLParagraphElement;
         ObjectScope.game.subscribe("draw", this);
@@ -68,6 +72,9 @@ export class UI {
         if (!this.submarine) return;
         this.updateUI();
         this.handleHandlers();
+        for (const action of this.actionButtons) {
+            action.update();
+        }
     }
 
     private static handleHandlers() {
@@ -118,13 +125,19 @@ export class UI {
     }
 }
 
-class UiAction {
+export class UiAction {
     container: HTMLDivElement;
     action: submarineAction;
 
     constructor(action: submarineAction) {
         this.action = action;
         this.createHtml();
+    }
+
+    update(){
+        if(this.action.part){
+            this.action.part.updateUI(this);
+        }
     }
 
     createHtml() {

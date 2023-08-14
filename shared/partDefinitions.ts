@@ -1,4 +1,7 @@
+import { bbid } from "./bbid";
 import { SubmarinePart, partSlot, partTypes } from "./common";
+import { ActiveSonarPart } from "./parts/activeSonar";
+import { BeaconDeployerPart } from "./parts/beaconDeployer";
 import { SubStats } from "./stats";
 
 export function defineParts() {
@@ -36,7 +39,7 @@ export function defineParts() {
         desc: "Small hull for a crewed vehicle. Can be fitted for any role, but designed primarily as a research vessel.",
         slot: partSlot.hull,
         strain: 1,
-        modification: SubStats.newHull(1, 8, 1.2, 0.04),
+        modification: SubStats.newHull(1, 8, 1.2, 0.04).addProperties(new SubStats({ lightPower: 100_000 })),
     });
 
     /*
@@ -100,11 +103,32 @@ export function defineParts() {
     //#endregion
 
     SubmarinePart.create({
+        type: partTypes.floodlight,
+        name: "Basic floodlight",
+        desc: "Lights up the area",
+        slot: partSlot.system,
+        strain: 1,
+        modification: new SubStats({ space: -0.2, weight: 0.2, lightPower: 300_000 }),
+    });
+
+    SubmarinePart.create({
+        type: partTypes.sonar,
+        name: "Active SONAR",
+        desc: "Active system that provides information about surrounding area",
+        slot: partSlot.system,
+        strain: 1,
+        modification: new SubStats({ space: -4, weight: 2 }),
+        actions: [{image: "/assets/sonar.png", name: "toggle-sonar"}],
+    });
+
+    SubmarinePart.create({
         type: partTypes.beaconDeployer,
         name: "Beacon deployer",
         desc: "Deploys a beacon",
         slot: partSlot.system,
         strain: 1,
         modification: new SubStats({ space: -1, weight: 0.2 }),
+        actions: [{image: "/assets/beacon.png", name: "deploy-beacon"}],
+
     });
 }

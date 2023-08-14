@@ -118,6 +118,13 @@ export class Connector {
                 break;
 
             case messageType.partActivity:
+                
+                const object = ObjectScope.network.getObject(msg.objectId);
+                const subBehaviour = object.getComponentByType(SubmarineBehaviour);
+                if (subBehaviour.owner == client.id) {
+                    if (msg.action == partActions.enableSonar) subBehaviour.commands.fire("toggle-sonar", { enabled: true });
+                    if (msg.action == partActions.disableSonar) subBehaviour.commands.fire("toggle-sonar", { enabled: false });
+                }
                 break;
 
             case messageType.partActivityLinkedPositioned:

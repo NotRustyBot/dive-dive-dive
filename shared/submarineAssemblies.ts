@@ -1,7 +1,8 @@
 import { SubmarineAssembly, SubmarinePart } from "./common";
-import { SerialisedComponent, commonDatatype } from "./component";
+import { Component, SerialisedComponent, commonDatatype } from "./component";
 import { datatype, Datagram } from "./datagram";
 import { NetComponent } from "./netComponent";
+import { Part } from "./parts/part";
 import { SubStats } from "./stats";
 import { SubmarineBehaviour } from "./submarine";
 
@@ -15,6 +16,7 @@ export type SerialisedAssembliesComponent = SerialisedAssemblies & SerialisedCom
 export class Assemblies extends NetComponent {
     assemblies = new Array<SubmarineAssembly>();
     submarine!: SubmarineBehaviour;
+    buffs = new Set<SubStats>();
 
     static override datagramDefinition(): void {
         super.datagramDefinition();
@@ -36,6 +38,11 @@ export class Assemblies extends NetComponent {
         for (const assembly of this.assemblies) {
             this.submarine.stats.addAssembly(assembly);
         }
+
+        for (const buff of this.buffs) {
+            this.submarine.stats.addProperties(buff);
+        }
+
         this.invalidateCache();
     }
 

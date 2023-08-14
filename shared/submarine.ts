@@ -99,6 +99,7 @@ export class SubmarineBehaviour extends NetComponent {
         const pumping = Math.abs(normalisedControl - this.ballastFill);
 
         this.battery -= (pumping * this.stats.ballastPumpCost + this.stats.engineCost * Math.abs(this.control.x)) * s;
+        this.battery -= this.stats.passiveDraw;
 
         if (this.ballastFill > 1) {
             this.ballastWater = this.stats.ballastVolume;

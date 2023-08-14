@@ -1,4 +1,5 @@
 import { defineParts } from "./partDefinitions";
+import { Part } from "./parts/part";
 import { Layer } from "./physics/chunks";
 import { SubStats } from "./stats";
 
@@ -21,7 +22,9 @@ export enum partSlot {
 }
 
 export enum partActions {
-    deployBeacon = 1
+    deployBeacon = 1,
+    enableSonar = 2,
+    disableSonar = 3,
 }
 
 type subPart = {
@@ -31,7 +34,7 @@ type subPart = {
     strain: number;
     slot: partSlot;
     modification?: SubStats;
-    actions?: Array<partActions>;
+    actions?: Array<actionButtonInfo>;
 };
 
 export enum partTypes {
@@ -43,17 +46,24 @@ export enum partTypes {
     largeHovHull = 5, //~50ppl
     giantHovHull = 6, //~120ppl
 
-    basicEngine = 7, 
-    basicPump = 8, 
-    battery = 9, 
-    beaconDeployer = 10, 
+    basicEngine = 7,
+    basicPump = 8,
+    battery = 9,
+    beaconDeployer = 10,
+    floodlight = 11,
+    sonar = 12,
 }
+
+export type actionButtonInfo = {
+    image: string;
+    name: string;
+};
 
 export class SubmarinePart {
     private static parts = new Map<partTypes, SubmarinePart>();
     slot: partSlot;
     modification: SubStats;
-    actions: Array<partActions> = [];
+    actions: Array<actionButtonInfo> = [];
     type: partTypes;
 
     constructor(data: subPart) {
@@ -74,6 +84,6 @@ export class SubmarinePart {
 }
 
 export type SubmarineAssembly = {
-    part: SubmarinePart,
-    count: number
-}
+    part: SubmarinePart;
+    count: number;
+};

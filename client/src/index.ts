@@ -18,7 +18,6 @@ import { UI, Waypoint } from "./ui/uiHandler";
 
 const game = ObjectScope.game;
 
-initCommon();
 UI.init();
 
 export const app = new PIXI.Application<HTMLCanvasElement>({ backgroundColor: "#112244" });
@@ -178,3 +177,4 @@ export function addChildByType(child: PIXI.Container, type: number) {
 
 initModules();
 Network.start();
+initCommon();
