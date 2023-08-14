@@ -14,7 +14,8 @@ export enum messageType {
     partActivityPositioned = 9,
     partActivityLinkedPositioned = 10,
     actionFailed = 11,
-    actionFailedLinked = 12
+    actionFailedLinked = 12,
+    devDelete = 13,
 }
 
 export type netMessage =
@@ -29,6 +30,7 @@ export type netMessage =
     | partActivityLinkedPositionedMessage
     | actionFailedMessage
     | actionFailedLinkedMessage
+    | devDeleteMessage;
 
 type tickMessage = {
     typeId: messageType.tick;
@@ -86,15 +88,19 @@ type partActivityLinkedPositionedMessage = {
 
 type actionFailedMessage = {
     typeId: messageType.actionFailed;
-    text: string
+    text: string;
 };
 
 type actionFailedLinkedMessage = {
     typeId: messageType.actionFailedLinked;
-    text: string
+    text: string;
     linkId: number;
 };
 
+type devDeleteMessage = {
+    typeId: messageType.devDelete;
+    objectId: number;
+};
 
 const messageIdDataType = datatype.uint8;
 
@@ -148,12 +154,16 @@ export class Message {
         }),
         [messageType.actionFailed]: new Datagram().append<actionFailedMessage>({
             typeId: messageIdDataType,
-            text: datatype.string
+            text: datatype.string,
         }),
         [messageType.actionFailedLinked]: new Datagram().append<actionFailedLinkedMessage>({
             typeId: messageIdDataType,
             text: datatype.string,
             linkId: commonDatatype.objectId,
+        }),
+        [messageType.devDelete]: new Datagram().append<devDeleteMessage>({
+            typeId: messageIdDataType,
+            objectId: commonDatatype.objectId,
         }),
     };
     static write<T extends netMessage>(view: AutoView, data: T) {
