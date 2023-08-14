@@ -125,6 +125,7 @@ setInterval(() => {
         game.fire("collisions", dt * 60);
         game.fire("physics", dt * 60);
         game.fire("post-collision", dt * 60);
+    serverInfo.time += dt;
     }
 
     Detector.processAll();

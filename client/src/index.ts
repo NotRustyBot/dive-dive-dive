@@ -74,7 +74,7 @@ Camera.scale = 0.5;
 let accumulator = 0;
 let phyTarget = 1 / 20;
 app.ticker.add((dt) => {
-    const serverInfo = ServerInfo.get() ?? { mode: serverMode.update, tick: 0 };
+    const serverInfo = ServerInfo.get() ?? { mode: serverMode.update, tick: 0, time: 0 };
     accumulator += dt / 60;
 
     if (serverInfo.tick == 1 && serverInfo.mode == serverMode.pause) {
@@ -91,7 +91,8 @@ app.ticker.add((dt) => {
     if (serverInfo.tick == 1 || serverInfo.mode == serverMode.update) {
         if (serverInfo.tick == 1) serverInfo.tick = 0;
 
-        time += dt / 60;
+        serverInfo.time += dt / 60;
+        time = serverInfo.time;
 
         while (accumulator >= phyTarget) {
             game.fire("update", 60 * phyTarget);

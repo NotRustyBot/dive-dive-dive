@@ -4,6 +4,7 @@ import { Sync } from "@shared/sync";
 import { Message, messageType, netMessage } from "@shared/messages";
 import { ServerInfo } from "@shared/serverInfo";
 import { ObjectScope } from "@shared/objectScope";
+import { time } from "index";
 
 export class Network {
     static websocket: WebSocket;
