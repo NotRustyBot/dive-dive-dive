@@ -210,6 +210,6 @@ export class DevAttach {
                 maxDist = dist;
             }
         }
-        this.select(nearest);
+        if(nearest != undefined)this.select(nearest);
     }
 }

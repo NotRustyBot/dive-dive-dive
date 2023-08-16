@@ -4,6 +4,7 @@ import { Vector } from "./types";
 import { Transform } from "./transform";
 import { Component, Serialisable, SerialisedComponent } from "./component";
 import { NetComponent } from "./netComponent";
+import { Sync } from "./sync";
 
 export type SerialisedBaseObject = {
     id: number;
@@ -65,6 +66,8 @@ export class BaseObject {
 
     unlinkNetComponent(netComponent: NetComponent) {
         this.netComponents.delete(netComponent.id);
+        const sync = this.getComponentByType(Sync);
+        if(sync) sync.componentRemoved(netComponent);
     }
 
     addComponent<T extends Component>(type: { new (parent: BaseObject, index: number): T }) {
@@ -77,6 +80,11 @@ export class BaseObject {
         if (component instanceof Transform) this.transform = component;
         this.components.set(component.id, component);
         return component;
+    }
+
+    removeComponent(component: Component){
+        component.onRemove();
+        this.components.delete(component.id);
     }
 
     getComponent<T extends Component>(id: number) {

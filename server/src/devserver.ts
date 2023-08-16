@@ -1,7 +1,7 @@
 import express from "express";
 import fs from "fs";
 import cors from "cors";
-import { Drawable, DynamicHitbox, FishBehaviour, Hitbox, Light, ObjectScope, Physics, PhysicsDrawable, Sync, Transform } from "./registry";
+import { Drawable, DynamicHitbox, FishBehaviour, Hitbox, Light, ObjectScope, Physics, PhysicsDrawable, Recharge, Sync, Transform } from "./registry";
 import fileUpload from "express-fileupload";
 import { clearAll, connector } from "./main";
 import { ServerInfo, serverMode } from "@shared/serverInfo";
@@ -33,7 +33,7 @@ export function startDevServer() {
             JSON.stringify({
                 netComponents: Object.entries(Component.componentTypes)
                     .filter(([k, comp]) => comp.prototype instanceof NetComponent)
-                    .map(([k, comp]) => ({typeId: k, name: comp.name})),
+                    .map(([k, comp]) => ({ typeId: k, name: comp.name })),
             })
         );
     });
@@ -212,4 +212,24 @@ registerFactory("grass", (v) => {
     image.initialiseComponents();
     ObjectScope.network.scopeObject(image);
     return image;
+});
+
+registerFactory("recharge", (v) => {
+    const recharge = ObjectScope.game.createObject();
+    const transform = recharge.addComponent(Transform);
+    const drawable = recharge.addComponent(Drawable);
+    const sync = recharge.addComponent(Sync);
+    const detectable = recharge.addComponent(RangeDetectable);
+    const charge = recharge.addComponent(Recharge);
+    const hitbox = recharge.addComponent(Hitbox);
+    charge.hitbox = hitbox;
+    hitbox.peek = [submarineLayer];
+    hitbox.sides = new Vector(100, 100);
+    drawable.url = "/assets/red.png";
+    drawable.extra = drawableExtra.background;
+    transform.position.set(v.x, v.y);
+    sync.authorize([transform, drawable]);
+    recharge.initialiseComponents();
+    ObjectScope.network.scopeObject(recharge);
+    return recharge;
 });

@@ -15,6 +15,7 @@ import { drawableExtra } from "@shared/mock/drawable";
 import { initCommon } from "@shared/common";
 import { TerrainFilter } from "./filters/terrain/terrainFilter";
 import { UI, Waypoint } from "./ui/uiHandler";
+import { Splash } from "splash";
 
 const game = ObjectScope.game;
 
@@ -65,6 +66,7 @@ lightsLayer.filterArea = realLayer.filterArea;
 realLayer.filters = [new ScreenFilter()];
 terrainLayer.filters = [new TerrainFilter()];
 resize();
+Splash.init();
 
 const spawnPoint = new Waypoint({ x: 0, y: 0 });
 spawnPoint.name = "spawn";

@@ -1,13 +1,17 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/netManager";
 import { AutoView } from "@shared/datagram";
-import { Message, ObjectScope, ServerInfo, SubmarineBehaviour, Sync, Transform } from "./registry";
+import { Message, ObjectScope, ServerInfo, SubmarineBehaviour, Sync, Transform, Mission } from "./registry";
 import { Client } from "./client";
-import { DEV_MODE, createSubmarine } from "./main";
+import { DEV_MODE, clientSubs, createSubmarine } from "./main";
 import { Detector } from "./server/detector";
 import { messageType, netMessage } from "@shared/messages";
 import { RangeDetector } from "./server/rangeDetector";
 import { partActions } from "@shared/common";
+import { MarkTask } from "./objectives/mark";
+import { Vector } from "@shared/types";
+import { rewardType } from "@shared/objectives";
+import fs from "fs";
 
 export class Connector {
     clients = new Map<WebSocket, Client>();
@@ -17,11 +21,16 @@ export class Connector {
     constructor() {
         this.websocket = new WebSocketServer({ port: 1500 });
     }
+
     send(view: AutoView) {
         const buffer = view.buffer.slice(0, view.index);
         for (const [socket, client] of this.clients) {
             socket.send(buffer);
         }
+    }
+
+    addClient(clientId: number, secret: string) {
+        this.knownClients.set(clientId, secret);
     }
 
     start() {
@@ -39,27 +48,36 @@ export class Connector {
                                 if (out.clientId == 0) {
                                     out.clientId = this.knownClients.size + 1;
                                     response = "nice to meet you";
+                                    this.addClient(out.clientId, out.secret);
                                 } else if (this.knownClients.get(out.clientId)) {
                                     if (this.knownClients.get(out.clientId) != out.secret) {
                                         response = "i don't think that's you";
                                         out.clientId = this.knownClients.size + 1;
+                                        this.addClient(out.clientId, out.secret);
                                     } else {
                                         response = "welcome back";
                                     }
                                 } else {
                                     out.clientId = this.knownClients.size + 1;
                                     response = "i don't know you";
+                                    this.addClient(out.clientId, out.secret);
                                 }
-
-                                this.knownClients.set(out.clientId, out.secret);
 
                                 const temp = new AutoView(new ArrayBuffer(1000));
                                 const client = new Client(clientSocket, out.clientId, out.secret);
+                                client.setupObject();
+
                                 if (response != "welcome back") {
                                     createSubmarine(client);
-                                } else {
-                                    Detector.subscribeClient(client);
                                 }
+                                Detector.subscribeClient(client);
+
+                                const mission = client.clientObject.addComponent(Mission);
+                                mission.steps = [[new MarkTask(new Vector(1000, 2000), undefined)]];
+                                mission.assignee = client;
+                                mission.rewards = [{ type: rewardType.standing, value: 10 }];
+                                mission.start();
+
                                 temp.writeUint16(headerId.handshake);
                                 NetManager.connectReply.serialise<HandshakeReply>(temp, { clientId: out.clientId, motd: this.motd, response });
                                 this.clients.set(clientSocket, client);
@@ -69,8 +87,9 @@ export class Connector {
                                     this.clients.delete(clientSocket);
                                 });
                                 temp.writeUint16(headerId.objects);
-                                temp.writeUint16(1);
+                                temp.writeUint16(2);
                                 ServerInfo.get().parent.getComponentByType(Sync).writeAllBits(temp);
+                                client.sync.writeAllBits(temp);
 
                                 client.send(temp);
 

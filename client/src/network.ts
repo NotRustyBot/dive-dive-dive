@@ -5,6 +5,7 @@ import { Message, messageType, netMessage } from "@shared/messages";
 import { ServerInfo } from "@shared/serverInfo";
 import { ObjectScope } from "@shared/objectScope";
 import { time } from "index";
+import { Splash } from "splash";
 
 export class Network {
     static websocket: WebSocket;
@@ -94,6 +95,21 @@ export class Network {
                 {
                     ObjectScope.game.getObject(msg.linkId).remove();
                     console.warn(msg.text);
+                }
+                break;
+
+            case messageType.componentRemoved:
+                {
+                    const obj = ObjectScope.network.getObject(msg.objectId);
+                    if (obj) {
+                        obj.removeComponent(obj.getComponent(msg.componentId));
+                    }
+                }
+                break;
+
+            case messageType.standing:
+                {
+                    Splash.standing(msg.change, msg.reason);
                 }
                 break;
         }

@@ -16,8 +16,8 @@ export class DevControl {
     static button(id: string, action: (button: HTMLInputElement) => void) {
         const btn = document.getElementById(id) as HTMLInputElement;
         btn.addEventListener("click", (e) => {
-            action(btn);
             e.stopPropagation();
+            action(btn);
         });
     }
 
@@ -94,14 +94,19 @@ export class InteractionMode {
         this.button = document.getElementById(button) as HTMLInputElement;
         this.button.addEventListener("click", (e) => {
             e.stopPropagation();
-            for (const [type, mode] of InteractionMode.interactionModes) {
-                mode.unset();
-            }
-
-            this.set();
-            InteractionMode.current = this.mode;
+            InteractionMode.select(this.mode);
         });
         this.div = document.getElementsByClassName(hide)[0] as HTMLDivElement;
+    }
+
+    static select(mode: interactionMode){
+        const choosen = this.interactionModes.get(mode);
+        for (const [type, mode] of InteractionMode.interactionModes) {
+            mode.unset();
+        }
+
+        choosen.set();
+        InteractionMode.current = mode;
     }
 
     static create(button: string, hide: string, mode: interactionMode) {

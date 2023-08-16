@@ -31,10 +31,12 @@ import { RangeDetectable } from "./server/rangeDetectable";
 import { Client } from "./client";
 import { drawableExtra } from "@shared/mock/drawable";
 import { startContentServer } from "./contentServe";
+import { initialiseTasks } from "./objectives/missionManager";
 
 export const DEV_MODE = !!process.env.dev;
 
 initCommon();
+initialiseTasks();
 startContentServer();
 if (DEV_MODE) startDevServer();
 NetManager.initDatagrams();

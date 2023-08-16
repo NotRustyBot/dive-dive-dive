@@ -11,9 +11,13 @@ import { Light } from "./light"
 import { ServerInfo } from "@shared/serverInfo"
 import { FishBehaviour } from "@shared/fish"
 import { Assemblies } from "@shared/submarineAssemblies"
+import { ClientData } from "@shared/clientData"
 import { BeaconDeployerPart } from "./parts/beaconDeployer"
 import { ActiveSonarPart } from "./parts/activeSonar"
 import { Marker } from "marker"
+import { Mission } from "mission"
+import { Reputation } from "@shared/reputation"
+import { Recharge } from "@shared/recharge"
 
 
 export function initModules(){
@@ -30,7 +34,11 @@ export function initModules(){
     Sync.initialise();
     Light.initialise();
     FishBehaviour.initialise();
+    ClientData.initialise();
     Assemblies.initialise();
     BeaconDeployerPart.initialise();
     ActiveSonarPart.initialise();
+    Reputation.initialise();
+    Mission.initialise();
+    Recharge.initialise();
 }

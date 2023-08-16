@@ -51,11 +51,19 @@ export class Sync extends NetComponent {
         this.datagram = this.datagram.cloneAppend<SerialisedSync>({
             components: [datatype.array, this.componentAuthority],
         });
-        this.cacheSize = (this.componentAuthority.calculateMinimalSize() + 2 * 12) * 32;
+        this.cacheSize = this.componentAuthority.calculateMinimalSize() * 32;
     }
 
     override onRemove(): void {
+        super.onRemove();
         Sync.localAuthority.delete(this);
+    }
+
+    componentRemoved(comp: NetComponent){
+        this.exclusive.delete(comp);
+        for (const [auth, caches] of this.cache) {
+            this.cache.get(auth).delete(comp.id);
+        }
     }
 
     authorize(components: NetComponent[], authority?: number) {

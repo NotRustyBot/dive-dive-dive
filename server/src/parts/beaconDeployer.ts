@@ -1,12 +1,13 @@
 import { drawableExtra } from "@shared/mock/drawable";
 import { ObjectScope } from "@shared/objectScope";
 import { BeaconDeployerPart as MockBeaconDeployerPart } from "@shared/parts/beaconDeployer";
-import { Drawable, Light, MarkerDetectable, Sync, Transform } from "../registry";
+import { Drawable, Hitbox, Light, MarkerDetectable, Reputation, Sync, Transform } from "../registry";
 import { RangeDetectable } from "../server/rangeDetectable";
 import { Client } from "src/client";
 import { messageType } from "@shared/messages";
 import { Marker } from "@shared/mock/marker";
 import { Vectorlike } from "@shared/types";
+import { beaconLayer } from "@shared/common";
 
 export class BeaconDeployerPart extends MockBeaconDeployerPart {
     override ["deploy-beacon"](data: { gameId: number; client: Client; position: Vectorlike }): void {
@@ -19,6 +20,8 @@ export class BeaconDeployerPart extends MockBeaconDeployerPart {
             const detectable = beacon.addComponent(RangeDetectable);
             const markerDetectable = beacon.addComponent(MarkerDetectable);
             const marker = beacon.addComponent(Marker);
+            const reputation = beacon.addComponent(Reputation);
+            const hitbox = beacon.addComponent(Hitbox);
             drawable.url = "/assets/beacon.png";
             drawable.extra = drawableExtra.background;
             transform.position.set(data.position.x, data.position.y);
@@ -31,12 +34,15 @@ export class BeaconDeployerPart extends MockBeaconDeployerPart {
             glow.intensity = 3;
             glow.extra = 1;
             glow.tint = 0xffaa88;
-            sync.authorize([transform, drawable, marker, glow]);
+            hitbox.poke = [beaconLayer];
+            reputation.approve(data.client.id);
+            sync.authorize([transform, drawable, marker, glow, hitbox, reputation]);
             beacon.initialiseComponents();
             ObjectScope.network.scopeObject(beacon);
             data.client.message({ typeId: messageType.objectLink, netId: beacon.getId(ObjectScope.network), linkId: data.gameId });
+            
         } else {
-            data.client.message({typeId: messageType.actionFailedLinked, linkId: data.gameId,  text: "Action Failed"})
+            data.client.message({ typeId: messageType.actionFailedLinked, linkId: data.gameId, text: "Action Failed" });
         }
     }
 }

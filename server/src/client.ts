@@ -1,27 +1,49 @@
 import { AutoView } from "@shared/datagram";
 import { WebSocket } from "ws";
-import { Message, ObjectScope, Sync } from "./registry";
+import { ClientData, Message, ObjectScope, Reputation, Sync } from "./registry";
 import { headerId } from "@shared/netManager";
 import { messageType, netMessage } from "@shared/messages";
 import { Detectable } from "./server/detectable";
 import { IncidentRotuer, trippable } from "@shared/incident";
 import { BaseObject } from "@shared/baseObject";
 
-type tracking = { initialised: boolean, wasTracked: boolean }
+type tracking = { initialised: boolean; wasTracked: boolean };
 
 export class Client {
     private socket: WebSocket;
     private secret: string;
     id: number;
-
     tracked = new Map<Detectable, tracking>();
+    data: ClientData;
+    reputation: Reputation;
 
     private messages: Array<netMessage> = [];
+    sync: Sync;
+    clientObject: BaseObject;
 
     constructor(socket: WebSocket, id: number, secret: string) {
         this.socket = socket;
         this.secret = secret;
         this.id = id;
+    }
+
+    setupObject() {
+        const data = ClientData.list.get(this.id)
+        if (data) {
+            this.clientObject = data.parent;
+            this.data = data;
+            this.reputation = data.parent.getComponentByType(Reputation);
+            this.sync = data.parent.getComponentByType(Sync);
+        } else {
+            this.clientObject = ObjectScope.network.createObject();
+            this.reputation = this.clientObject.addComponent(Reputation);
+            this.data = this.clientObject.addComponent(ClientData);
+            this.sync = this.clientObject.addComponent(Sync);
+            this.data.userId = this.id;
+            this.sync.authorize([this.data, this.reputation]);
+            this.sync.exclusivity([this.data], this.id);
+            this.clientObject.initialiseComponents();
+        }
     }
 
     debugCam?: BaseObject;
@@ -44,7 +66,7 @@ export class Client {
         if (tracked) {
             this.message({
                 typeId: messageType.untrackObject,
-                objectId: detectable.sync.parent.getId(ObjectScope.network)
+                objectId: detectable.sync.parent.getId(ObjectScope.network),
             });
             this.tracked.delete(detectable);
         }
@@ -82,6 +104,10 @@ export class Client {
 
             tracked.wasTracked = false;
         }
+
+        const serialised = this.sync.writeAuthorityBits(view, this.id);
+        if (serialised) actualSize++;
+
         view.setUint16(index, actualSize);
     }
 
