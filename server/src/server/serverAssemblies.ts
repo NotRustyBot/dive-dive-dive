@@ -7,7 +7,7 @@ export class Assemblies extends MockAssemblies {
     override calculateStats() {
         super.calculateStats();
         const maxRange = Math.max(this.submarine.stats.lightEffectiveRange(), this.submarine.stats.sonarEffectiveRange());
-        this.rangeDetector.range = {x: maxRange, y: maxRange};
+        if (this.rangeDetector) this.rangeDetector.range = { x: maxRange, y: maxRange };
     }
 
     attachParts() {
@@ -19,6 +19,4 @@ export class Assemblies extends MockAssemblies {
             }
         }
     }
-
 }
-

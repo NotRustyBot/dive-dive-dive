@@ -5,6 +5,7 @@ import { Sync } from "@shared/sync";
 import { Network } from "../network";
 import { DevAttach } from "./devDebugAttach";
 import { NetComponent } from "@shared/netComponent";
+import { InteractionMode, interactionMode } from "./devControls";
 
 export class DevObjectInfo {
     baseObject: BaseObject;
@@ -39,7 +40,9 @@ export class DevObjectInfo {
         this.container.appendChild(this.identity);
         this.container.appendChild(this.head);
         this.container.addEventListener("click", (e) => {
+            e.stopPropagation();
             DevAttach.select(this.devAttach);
+            InteractionMode.select(interactionMode.components);
         });
 
         DevObjectInfo.container.appendChild(this.container);
@@ -95,8 +98,6 @@ export class DevComponentInfo {
     }
 
     createHTML() {
-        console.log("????????????");
-
         this.container = document.createElement("div");
         this.container.classList.add("dev-object-info");
         if (!this.isOpen) this.container.classList.add("closed");

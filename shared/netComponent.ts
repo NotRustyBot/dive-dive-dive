@@ -45,7 +45,6 @@ export class NetComponent extends Component {
 
     override onRemove(): void {
         this.parent.unlinkNetComponent(this);
-        
     }
 
     invalidateCache() {
@@ -72,6 +71,7 @@ export class NetComponent extends Component {
 
     static dataFromBits(view: AutoView): SerialisedComponent {
         const typeId = view.getUint16(view.index);
+        if(typeId == 0) return undefined;
         return (this.componentTypes[typeId] as typeof NetComponent).datagram.deserealise(view);
     }
 }

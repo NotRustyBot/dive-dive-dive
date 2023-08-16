@@ -6,11 +6,13 @@ import { SubStats } from "./stats";
 export let terrainLayer: Layer;
 export let fishLayer: Layer;
 export let submarineLayer: Layer;
+export let beaconLayer: Layer;
 
 export function initCommon() {
     terrainLayer = new Layer();
     fishLayer = new Layer();
     submarineLayer = new Layer();
+    beaconLayer = new Layer();
 
     defineParts();
 }

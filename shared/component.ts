@@ -19,6 +19,8 @@ export const commonDatatype = {
     compId: datatype.uint8,
     objectId: datatype.uint16,
     color: datatype.uint32,
+    userId: datatype.uint32,
+    missionId: datatype.uint16
 }
 
 export class Component {

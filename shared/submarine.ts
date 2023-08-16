@@ -8,7 +8,7 @@ import { clamp } from "./utils";
 import { Datagram, datatype } from "./datagram";
 import { ObjectScope } from "./objectScope";
 import { SubmarineAssembly, SubmarinePart } from "./common";
-import { SerialisedComponent } from "./component";
+import { SerialisedComponent, commonDatatype } from "./component";
 import { NetComponent } from "./netComponent";
 import { IncidentRotuer } from "./incident";
 
@@ -58,7 +58,7 @@ export class SubmarineBehaviour extends NetComponent {
             leakWater: datatype.float32,
             physics: datatype.uint8,
             leaking: datatype.float32,
-            owner: datatype.uint32,
+            owner: commonDatatype.userId,
             battery: datatype.float32,
         });
         this.cacheSize;
