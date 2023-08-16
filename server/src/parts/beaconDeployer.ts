@@ -35,6 +35,7 @@ export class BeaconDeployerPart extends MockBeaconDeployerPart {
             glow.extra = 1;
             glow.tint = 0xffaa88;
             hitbox.poke = [beaconLayer];
+            reputation.approve(data.client.id);
             sync.authorize([transform, drawable, marker, glow, hitbox, reputation]);
             beacon.initialiseComponents();
             ObjectScope.network.scopeObject(beacon);

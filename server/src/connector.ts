@@ -11,6 +11,7 @@ import { partActions } from "@shared/common";
 import { MarkTask } from "./objectives/mark";
 import { Vector } from "@shared/types";
 import { rewardType } from "@shared/objectives";
+import fs from "fs";
 
 export class Connector {
     clients = new Map<WebSocket, Client>();
@@ -20,11 +21,16 @@ export class Connector {
     constructor() {
         this.websocket = new WebSocketServer({ port: 1500 });
     }
+
     send(view: AutoView) {
         const buffer = view.buffer.slice(0, view.index);
         for (const [socket, client] of this.clients) {
             socket.send(buffer);
         }
+    }
+
+    addClient(clientId: number, secret: string) {
+        this.knownClients.set(clientId, secret);
     }
 
     start() {
@@ -42,32 +48,34 @@ export class Connector {
                                 if (out.clientId == 0) {
                                     out.clientId = this.knownClients.size + 1;
                                     response = "nice to meet you";
+                                    this.addClient(out.clientId, out.secret);
                                 } else if (this.knownClients.get(out.clientId)) {
                                     if (this.knownClients.get(out.clientId) != out.secret) {
                                         response = "i don't think that's you";
                                         out.clientId = this.knownClients.size + 1;
+                                        this.addClient(out.clientId, out.secret);
                                     } else {
                                         response = "welcome back";
                                     }
                                 } else {
                                     out.clientId = this.knownClients.size + 1;
                                     response = "i don't know you";
+                                    this.addClient(out.clientId, out.secret);
                                 }
-
-                                this.knownClients.set(out.clientId, out.secret);
 
                                 const temp = new AutoView(new ArrayBuffer(1000));
                                 const client = new Client(clientSocket, out.clientId, out.secret);
-                                client.createObject();
+                                client.setupObject();
+
                                 if (response != "welcome back") {
                                     createSubmarine(client);
-                                } else {
-                                    Detector.subscribeClient(client);
                                 }
+                                Detector.subscribeClient(client);
+
                                 const mission = client.clientObject.addComponent(Mission);
                                 mission.steps = [[new MarkTask(new Vector(1000, 2000), undefined)]];
                                 mission.assignee = client;
-                                mission.rewards = [{type: rewardType.standing, value: 10}]
+                                mission.rewards = [{ type: rewardType.standing, value: 10 }];
                                 mission.start();
 
                                 temp.writeUint16(headerId.handshake);

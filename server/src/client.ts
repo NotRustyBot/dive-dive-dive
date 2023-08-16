@@ -27,15 +27,23 @@ export class Client {
         this.id = id;
     }
 
-    createObject() {
-        this.clientObject = ObjectScope.network.createObject();
-        this.reputation = this.clientObject.addComponent(Reputation);
-        this.data = this.clientObject.addComponent(ClientData);
-        this.sync = this.clientObject.addComponent(Sync);
-        this.data.userId = this.id;
-        this.sync.authorize([this.data, this.reputation]);
-        this.sync.exclusivity([this.data], this.id);
-        this.clientObject.initialiseComponents();
+    setupObject() {
+        const data = ClientData.list.get(this.id)
+        if (data) {
+            this.clientObject = data.parent;
+            this.data = data;
+            this.reputation = data.parent.getComponentByType(Reputation);
+            this.sync = data.parent.getComponentByType(Sync);
+        } else {
+            this.clientObject = ObjectScope.network.createObject();
+            this.reputation = this.clientObject.addComponent(Reputation);
+            this.data = this.clientObject.addComponent(ClientData);
+            this.sync = this.clientObject.addComponent(Sync);
+            this.data.userId = this.id;
+            this.sync.authorize([this.data, this.reputation]);
+            this.sync.exclusivity([this.data], this.id);
+            this.clientObject.initialiseComponents();
+        }
     }
 
     debugCam?: BaseObject;

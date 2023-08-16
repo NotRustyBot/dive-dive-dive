@@ -91,15 +91,17 @@ export class Mission extends MockMission {
     override fromSerialisable(data: SerialisedMissionComponent) {
         super.fromSerialisable(data);
         this.description = data.description;
-        this.steps = [];
-        for (const step of data.steps) {
-            const arry = new Array<MissionTask>();
-            for (const taskData of step) {
-                const task = MissionTask.fromData(taskData);
-                arry.push(task);
+        if(data.steps){
+            this.steps = [];
+            for (const step of data.steps) {
+                const arry = new Array<MissionTask>();
+                for (const taskData of step) {
+                    const task = MissionTask.fromData(taskData);
+                    arry.push(task);
+                }
+                this.steps.push(arry);
             }
-            this.steps.push(arry);
+            this.startStep();
         }
-        this.startStep();
     }
 }

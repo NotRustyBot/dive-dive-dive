@@ -7,6 +7,7 @@ import { beaconLayer, submarineLayer } from "@shared/common";
 import { Transform } from "@shared/transform";
 import { taskId } from "@shared/objectives";
 import { Mission } from "./mission";
+import { Reputation } from "@shared/reputation";
 
 export class MarkTask extends MissionTask {
     static override taskId = taskId.beacon;
@@ -36,6 +37,10 @@ export class MarkTask extends MissionTask {
         this.hitbox.checkCollisions();
         for (const [_, overlap] of this.hitbox.overlaps) {
             for (const o of overlap) {
+                const rep = o.with.parent.getComponentByType(Reputation);
+                if(rep){
+                    rep.changeStanding(10);
+                }
                 this.finish();
                 break;
             }
