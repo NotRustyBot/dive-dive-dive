@@ -40,6 +40,7 @@ export class Client {
             this.data = this.clientObject.addComponent(ClientData);
             this.sync = this.clientObject.addComponent(Sync);
             this.data.userId = this.id;
+            this.data.secret = this.secret;
             this.sync.authorize([this.data, this.reputation]);
             this.sync.exclusivity([this.data], this.id);
             this.clientObject.initialiseComponents();

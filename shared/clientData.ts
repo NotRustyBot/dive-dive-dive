@@ -1,17 +1,21 @@
 import { SerialisedComponent, commonDatatype } from "./component";
-import { Datagram, datatype } from "./datagram";
 import { NetComponent } from "./netComponent";
-import { Vectorlike } from "./types";
 
 export type SerialisedClientData = {
     userId: number;
 };
 
+type FileClientData = {
+    secret: string;
+}
+
 export type SerialisedClientDataComponent = SerialisedClientData & SerialisedComponent;
+export type SerialisedFileClientDataComponent = SerialisedClientDataComponent & FileClientData;
 
 export class ClientData extends NetComponent {
     static list = new Map<number, ClientData>();
     userId: number;
+    secret: string;
 
     static override datagramDefinition(): void {
         super.datagramDefinition();
@@ -30,14 +34,16 @@ export class ClientData extends NetComponent {
         ClientData.list.delete(this.userId);
     }
 
-    override toSerialisable(): SerialisedClientDataComponent {
-        const data = super.toSerialisable() as SerialisedClientDataComponent;
+    override toSerialisable(): SerialisedFileClientDataComponent {
+        const data = super.toSerialisable() as SerialisedFileClientDataComponent;
         data.userId = this.userId;
+        data.secret = this.secret;
         return data;
     }
 
-    override fromSerialisable(data: SerialisedClientDataComponent) {
+    override fromSerialisable(data: SerialisedFileClientDataComponent) {
         this.userId = data.userId;
+        this.secret = data.secret;
         super.fromSerialisable(data);
     }
 }
