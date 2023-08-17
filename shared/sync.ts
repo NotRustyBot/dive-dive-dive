@@ -10,6 +10,10 @@ export type ComponentAuthority = {
     id: number;
 };
 
+export type ComponentsRemoved = {
+    removed: Array<{ id: number }>;
+};
+
 export type SerialisedSync = {
     components: Array<ComponentAuthority>;
 };
@@ -39,6 +43,9 @@ export class Sync extends NetComponent {
         authority: datatype.uint32,
         id: commonDatatype.compId,
     });
+    static componentRemoved = new Datagram().append<ComponentsRemoved>({
+        removed: [datatype.array, new Datagram().addField("id", commonDatatype.compId)],
+    });
     private cache = new Map<number, Map<number, ComponentCacheInfo>>();
     private exclusive = new Map<NetComponent, Set<number>>();
 
@@ -59,10 +66,10 @@ export class Sync extends NetComponent {
         Sync.localAuthority.delete(this);
     }
 
-    componentRemoved(comp: NetComponent){
+    componentRemoved(comp: NetComponent) {
         this.exclusive.delete(comp);
         for (const [auth, caches] of this.cache) {
-            this.cache.get(auth).delete(comp.id);
+            this.cache.get(auth).set(comp.id, undefined);
         }
     }
 
@@ -99,7 +106,13 @@ export class Sync extends NetComponent {
         const index = view.index;
         let actualSize = 0;
         view.writeUint8(caches.size);
+        const toRemove: Array<{ id: number }> = [];
         for (const [id, cache] of caches) {
+            if (!cache) {
+                caches.delete(id);
+                toRemove.push({ id });
+                continue;
+            }
             const exclusivity = this.exclusive.get(cache.component);
             if (target && exclusivity && !exclusivity.has(target)) continue;
             if (!target || cache.needsUpdate(target)) {
@@ -110,7 +123,9 @@ export class Sync extends NetComponent {
 
         view.setUint8(index, actualSize);
 
-        if (actualSize == 0) {
+        Sync.componentRemoved.serialise<ComponentsRemoved>(view, { removed: toRemove });
+
+        if (actualSize == 0 && toRemove.length == 0) {
             view.index = bindex;
             return false;
         }
@@ -130,6 +145,7 @@ export class Sync extends NetComponent {
             actualSize++;
         }
         view.setUint8(index, actualSize);
+        Sync.componentRemoved.serialise<ComponentsRemoved>(view, { removed: [] });
     }
 
     static resolveBits(view: AutoView, links?: Map<number, number>) {
@@ -155,6 +171,10 @@ export class Sync extends NetComponent {
         }
 
         parent.applyData(data as SerialisedBaseObject);
+        const toRemove = Sync.componentRemoved.deserealise<ComponentsRemoved>(view);
+        for (const removee of toRemove.removed) {
+            parent.removeComponentId(removee.id);
+        }
         return parent;
     }
 
@@ -180,6 +200,10 @@ export class Sync extends NetComponent {
         }
 
         parent.applyData(data as SerialisedBaseObject);
+        const toRemove = Sync.componentRemoved.deserealise<ComponentsRemoved>(view);
+        for (const removee of toRemove.removed) {
+            parent.removeComponentId(removee.id);
+        }
         return parent;
     }
 
@@ -189,7 +213,7 @@ export class Sync extends NetComponent {
 
         for (const [authority, caches] of this.cache) {
             for (const [id, cache] of caches) {
-                compas.push({ authority, id: cache.component.id });
+                if (cache) compas.push({ authority, id: cache.component.id });
             }
         }
 

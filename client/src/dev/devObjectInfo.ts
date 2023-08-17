@@ -67,6 +67,12 @@ export class DevObjectInfo {
             const compInfo = this.compInfo.get(comp);
             compInfo.refresh();
         }
+
+        for (const [comp, compInfo] of this.compInfo) {
+            if(comp?.parent.components.has(comp.id))continue;
+            this.compInfo.delete(comp);
+            compInfo.remove();
+        }
     }
 
     remove() {
@@ -139,11 +145,13 @@ export class DevComponentInfo {
         const compData = this.comp.toSerialisable();
         if (this.textarea == document.activeElement) return;
         this.textarea.value = JSON.stringify(compData, null, 2);
-        if (this.comp instanceof NetComponent) this.head.innerText = this.comp.typeName() + " " +  Math.floor((this.comp.cacheId / Network.sendCount) * 100) + "%";
+        if (this.comp instanceof NetComponent) this.head.innerText = this.comp.typeName() + " " + Math.floor((this.comp.cacheId / Network.sendCount) * 100) + "%";
     }
 
     remove() {
-        this.container.remove();
-        this.container = undefined;
+        if (this.container) {
+            this.container.remove();
+            this.container = undefined;
+        }
     }
 }

@@ -67,7 +67,7 @@ export class BaseObject {
     unlinkNetComponent(netComponent: NetComponent) {
         this.netComponents.delete(netComponent.id);
         const sync = this.getComponentByType(Sync);
-        if(sync) sync.componentRemoved(netComponent);
+        if (sync) sync.componentRemoved(netComponent);
     }
 
     addComponent<T extends Component>(type: { new (parent: BaseObject, index: number): T }) {
@@ -82,13 +82,18 @@ export class BaseObject {
         return component;
     }
 
-    removeComponent(component: Component){
+    removeComponent(component: Component) {
         component.onRemove();
         this.components.delete(component.id);
     }
 
     getComponent<T extends Component>(id: number) {
         return this.components.get(id) as T;
+    }
+
+    removeComponentId(id: number) {
+        const comp = this.getComponent(id);
+        if (comp) this.removeComponent(comp);
     }
 
     getComponentByType<T extends Component>(type: { new (parent: BaseObject, index: number): T; typeId: number }): T | undefined {

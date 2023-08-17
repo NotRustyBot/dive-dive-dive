@@ -16,7 +16,7 @@ export enum messageType {
     actionFailed = 11,
     actionFailedLinked = 12,
     devDelete = 13,
-    componentRemoved = 14,
+    //componentRemoved = 14,
     standing = 15,
 }
 
@@ -33,7 +33,6 @@ export type netMessage =
     | actionFailedMessage
     | actionFailedLinkedMessage
     | devDeleteMessage
-    | componentRemovedMessage
     | standingMessage
 
 type tickMessage = {
@@ -106,12 +105,6 @@ type devDeleteMessage = {
     objectId: number;
 };
 
-type componentRemovedMessage = {
-    typeId: messageType.componentRemoved;
-    objectId: number;
-    componentId: number;
-};
-
 type standingMessage = {
     typeId: messageType.standing;
     change: number;
@@ -180,11 +173,6 @@ export class Message {
         [messageType.devDelete]: new Datagram().append<devDeleteMessage>({
             typeId: messageIdDataType,
             objectId: commonDatatype.objectId,
-        }),
-        [messageType.componentRemoved]: new Datagram().append<componentRemovedMessage>({
-            typeId: messageIdDataType,
-            objectId: commonDatatype.objectId,
-            componentId: commonDatatype.compId,
         }),
         [messageType.standing]: new Datagram().append<standingMessage>({
             typeId: messageIdDataType,
