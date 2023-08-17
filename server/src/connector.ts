@@ -152,6 +152,7 @@ export class Connector {
                     const subBehaviour = object.getComponentByType(SubmarineBehaviour);
                     if (subBehaviour.owner == client.id) {
                         if (msg.action == partActions.deployBeacon) subBehaviour.commands.fire("deploy-beacon", { gameId: msg.linkId, client, position: msg.position });
+                        if (msg.action == partActions.deployBait) subBehaviour.commands.fire("deploy-bait", { gameId: msg.linkId, client, position: msg.position });
                     }
                 }
                 break;

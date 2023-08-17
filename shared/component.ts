@@ -9,7 +9,7 @@ export type Serialisable = {
 
 export type SerialisableValue = number | string | Vectorlike | Array<number> | Array<string> | Array<Serialisable>;
 
-export interface SerialisedComponent extends Serialisable {
+export interface SerialisedComponent {
     typeId: number,
     id: number,
 }

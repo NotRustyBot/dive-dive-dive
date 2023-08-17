@@ -43,14 +43,15 @@ export class MarkerDetectable extends Detectable implements RectWithParent {
         MarkerDetectable.lookup.set(this.parent, this);
         ObjectScope.game.subscribe("post-collision", this);
         this.position = this.parent.position.result();
-        physicsLayers[physicsLayerEnum.detectable].addObject(this, this.inAreas);
+        physicsLayers[physicsLayerEnum.marker].addObject(this, this.inAreas);
     }
 
     ["post-collision"](dt: number) {
-        physicsLayers[physicsLayerEnum.detectable].moveObject(this, this.parent.position, this.inAreas);
+        physicsLayers[physicsLayerEnum.marker].moveObject(this, this.parent.position, this.inAreas);
     }
 
     override onRemove(): void {
+        super.onRemove();
         MarkerDetectable.lookup.delete(this.parent);
         ObjectScope.game.unsubscribe("post-collision", this);
     }

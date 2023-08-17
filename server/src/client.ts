@@ -28,7 +28,7 @@ export class Client {
     }
 
     setupObject() {
-        const data = ClientData.list.get(this.id)
+        const data = ClientData.list.get(this.id);
         if (data) {
             this.clientObject = data.parent;
             this.data = data;
@@ -67,7 +67,7 @@ export class Client {
         if (tracked) {
             this.message({
                 typeId: messageType.untrackObject,
-                objectId: detectable.sync.parent.getId(ObjectScope.network),
+                objectId: detectable.netId
             });
             this.tracked.delete(detectable);
         }

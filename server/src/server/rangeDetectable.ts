@@ -6,8 +6,7 @@ import { Area, Layer, RectWithParent } from "@shared/physics/chunks";
 import { physicsLayerEnum, physicsLayers } from "../main";
 import { Vector } from "@shared/types";
 
-export type SerialisedRangeDetectable = {
-}
+export type SerialisedRangeDetectable = {};
 
 export type SerialisedRangeDetectableComponent = SerialisedRangeDetectable & SerialisedComponent;
 
@@ -15,19 +14,19 @@ export class RangeDetectable extends Detectable implements RectWithParent {
     position = new Vector();
 
     public get x1(): number {
-        return this.position.x
+        return this.position.x;
     }
 
     public get x2(): number {
-        return this.position.x
+        return this.position.x;
     }
 
     public get y1(): number {
-        return this.position.y
+        return this.position.y;
     }
 
     public get y2(): number {
-        return this.position.y
+        return this.position.y;
     }
 
     inAreas = new Set<Area>();
@@ -43,7 +42,6 @@ export class RangeDetectable extends Detectable implements RectWithParent {
         ObjectScope.game.subscribe("post-collision", this);
         this.position = this.parent.position.result();
         physicsLayers[physicsLayerEnum.detectable].addObject(this, this.inAreas);
-
     }
 
     ["post-collision"](dt: number) {
@@ -51,9 +49,8 @@ export class RangeDetectable extends Detectable implements RectWithParent {
     }
 
     override onRemove(): void {
+        super.onRemove();
         RangeDetectable.lookup.delete(this.parent);
         ObjectScope.game.unsubscribe("post-collision", this);
-
     }
 }
-

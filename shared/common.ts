@@ -27,6 +27,7 @@ export enum partActions {
     deployBeacon = 1,
     enableSonar = 2,
     disableSonar = 3,
+    deployBait = 4,
 }
 
 type subPart = {
@@ -54,6 +55,7 @@ export enum partTypes {
     beaconDeployer = 10,
     floodlight = 11,
     sonar = 12,
+    fishFeeder = 13,
 }
 
 export type actionButtonInfo = {

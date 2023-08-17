@@ -14,7 +14,7 @@ export class MarkerDetector extends Detector {
     }
 
     override detect() {
-        const area = physicsLayers[physicsLayerEnum.detectable].getObjects(this.parent.position);
+        const area = physicsLayers[physicsLayerEnum.marker].getObjects(this.parent.position);
 
         for (const rect of area) {
             const detectable = RangeDetectable.getByParent(rect.parent);

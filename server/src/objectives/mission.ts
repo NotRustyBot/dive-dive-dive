@@ -4,9 +4,13 @@ import { Client } from "src/client";
 import { ObjectScope } from "@shared/objectScope";
 import { messageType } from "@shared/messages";
 import { rewardType } from "@shared/objectives";
+import { ClientData } from "@shared/clientData";
+import { Connector } from "src/connector";
+import { connector } from "src/main";
 
 export type SerialisedMission = {
     steps: Array<Array<taskData>>;
+    assignee: number
 };
 
 export type SerialisedMissionComponent = SerialisedMission & MockSerialisedMissionComponent;
@@ -73,25 +77,27 @@ export class Mission extends MockMission {
         }
     }
 
-    override toSerialisable() {
+    override toSerialisable() : SerialisedMissionComponent {
         this.tasks = this.steps[this.step].map((t) => ({
             objectiveType: t.taskId,
             ready: t.done ? 1 : 0,
             objectId: t.object?.getId(ObjectScope.network) ?? 0,
             position: t.position,
         }));
-        const data = super.toSerialisable();
-        data.steps = new Array<taskData>();
+        const data = super.toSerialisable() as SerialisedMissionComponent;
+        data.steps = new Array<Array<taskData>>();
+        data.assignee = this.assignee.id;
         for (const step of this.steps) {
             data.steps.push(step.map((t) => t.toData()) as any);
         }
         return data;
     }
 
-    override fromSerialisable(data: SerialisedMissionComponent) {
+    override fromSerialisable(data: SerialisedMissionComponent | MockSerialisedMissionComponent) {
         super.fromSerialisable(data);
         this.description = data.description;
-        if(data.steps){
+        if("steps" in data){
+            //this.assignee = ???
             this.steps = [];
             for (const step of data.steps) {
                 const arry = new Array<MissionTask>();

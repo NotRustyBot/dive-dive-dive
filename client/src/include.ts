@@ -14,10 +14,12 @@ import { Assemblies } from "@shared/submarineAssemblies"
 import { ClientData } from "@shared/clientData"
 import { BeaconDeployerPart } from "./parts/beaconDeployer"
 import { ActiveSonarPart } from "./parts/activeSonar"
+import { FishFeederPart } from "./parts/fishFeeder"
 import { Marker } from "marker"
 import { Mission } from "mission"
 import { Reputation } from "@shared/reputation"
 import { Recharge } from "@shared/recharge"
+import { FishFood } from "@shared/fishFood"
 
 
 export function initModules(){
@@ -41,4 +43,6 @@ export function initModules(){
     Reputation.initialise();
     Mission.initialise();
     Recharge.initialise();
+    FishFeederPart.initialise();
+    FishFood.initialise();
 }
