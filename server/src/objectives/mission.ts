@@ -45,7 +45,6 @@ export class Mission extends MockMission {
     startStep() {
         if (this.step == this.steps.length) {
             this.parent.removeComponent(this);
-            this.assignee.message({ typeId: messageType.componentRemoved, componentId: this.id, objectId: this.parent.getId(ObjectScope.network) });
             this.reward();
             return;
         }

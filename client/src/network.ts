@@ -98,17 +98,10 @@ export class Network {
                 }
                 break;
 
-            case messageType.componentRemoved:
-                {
-                    const obj = ObjectScope.network.getObject(msg.objectId);
-                    if (obj) {
-                        obj.removeComponent(obj.getComponent(msg.componentId));
-                    }
-                }
-                break;
-
             case messageType.standing:
                 {
+                    console.log(msg);
+                    
                     Splash.standing(msg.change, msg.reason);
                 }
                 break;

@@ -111,6 +111,7 @@ export function createSubmarine(client: Client) {
     net.authorize([control], client.id);
     net.exclusivity([control], client.id);
     detector.subscribe(client);
+    markerDetector.subscribe(client);
     sub.initialiseComponents();
     ObjectScope.network.scopeObject(sub);
     clientSubs.set(client.id, submarine);
