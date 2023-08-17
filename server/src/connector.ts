@@ -1,9 +1,9 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { HandshakeReply, HandshakeRequest, NetManager, headerId } from "@shared/netManager";
 import { AutoView } from "@shared/datagram";
-import { Message, ObjectScope, ServerInfo, SubmarineBehaviour, Sync, Transform, Mission } from "./registry";
+import { Message, ObjectScope, ServerInfo, SubmarineBehaviour, Sync, Transform, Mission, ClientData } from "./registry";
 import { Client } from "./client";
-import { DEV_MODE, clientSubs, createSubmarine } from "./main";
+import { DEV_MODE, createSubmarine } from "./main";
 import { Detector } from "./server/detector";
 import { messageType, netMessage } from "@shared/messages";
 import { RangeDetector } from "./server/rangeDetector";
@@ -11,13 +11,11 @@ import { partActions } from "@shared/common";
 import { MarkTask } from "./objectives/mark";
 import { Vector } from "@shared/types";
 import { rewardType } from "@shared/objectives";
-import fs from "fs";
 
 export class Connector {
     clients = new Map<WebSocket, Client>();
     websocket: WebSocketServer;
     motd: string = "motd";
-    knownClients = new Map<number, string>();
     constructor() {
         this.websocket = new WebSocketServer({ port: 1500 });
     }
@@ -27,10 +25,6 @@ export class Connector {
         for (const [socket, client] of this.clients) {
             socket.send(buffer);
         }
-    }
-
-    addClient(clientId: number, secret: string) {
-        this.knownClients.set(clientId, secret);
     }
 
     start() {
@@ -46,21 +40,18 @@ export class Connector {
                                 const out = NetManager.connectRequest.deserealise<HandshakeRequest>(autoview);
                                 let response = "";
                                 if (out.clientId == 0) {
-                                    out.clientId = this.knownClients.size + 1;
+                                    out.clientId = ClientData.list.size + 1;
                                     response = "nice to meet you";
-                                    this.addClient(out.clientId, out.secret);
-                                } else if (this.knownClients.get(out.clientId)) {
-                                    if (this.knownClients.get(out.clientId) != out.secret) {
+                                } else if (ClientData.list.get(out.clientId)) {
+                                    if (ClientData.list.get(out.clientId).secret != out.secret) {
                                         response = "i don't think that's you";
-                                        out.clientId = this.knownClients.size + 1;
-                                        this.addClient(out.clientId, out.secret);
+                                        out.clientId = ClientData.list.size + 1;
                                     } else {
                                         response = "welcome back";
                                     }
                                 } else {
-                                    out.clientId = this.knownClients.size + 1;
+                                    out.clientId = ClientData.list.size + 1;
                                     response = "i don't know you";
-                                    this.addClient(out.clientId, out.secret);
                                 }
 
                                 const temp = new AutoView(new ArrayBuffer(1000));
@@ -69,14 +60,15 @@ export class Connector {
 
                                 if (response != "welcome back") {
                                     createSubmarine(client);
+                                    const mission = client.clientObject.addComponent(Mission);
+                                    mission.steps = [[new MarkTask(new Vector(1000, 2000), undefined)]];
+                                    mission.assignee = client;
+                                    mission.rewards = [{ type: rewardType.standing, value: 10 }];
+                                    mission.start();
                                 }
                                 Detector.subscribeClient(client);
 
-                                const mission = client.clientObject.addComponent(Mission);
-                                mission.steps = [[new MarkTask(new Vector(1000, 2000), undefined)]];
-                                mission.assignee = client;
-                                mission.rewards = [{ type: rewardType.standing, value: 10 }];
-                                mission.start();
+
 
                                 temp.writeUint16(headerId.handshake);
                                 NetManager.connectReply.serialise<HandshakeReply>(temp, { clientId: out.clientId, motd: this.motd, response });
