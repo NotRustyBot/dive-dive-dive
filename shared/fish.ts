@@ -11,6 +11,7 @@ export type SerialisedFishBehaviour = {
     physics: number;
     hitbox: number;
     control: Vectorlike;
+    food: number;
 };
 
 export type SerialisedFishBehaviourComponent = SerialisedFishBehaviour & SerialisedComponent;
@@ -19,6 +20,7 @@ export class FishBehaviour extends NetComponent {
     physics!: Physics;
     hitbox!: Hitbox;
     control: Vector = new Vector();
+    food = 0;
 
     static override datagramDefinition(): void {
         super.datagramDefinition();
@@ -26,6 +28,7 @@ export class FishBehaviour extends NetComponent {
             physics: commonDatatype.compId,
             hitbox: commonDatatype.compId,
             control: datatype.vector32,
+            food: datatype.float32,
         });
     }
 
@@ -37,7 +40,7 @@ export class FishBehaviour extends NetComponent {
 
     ["update"](dt: number) {
         const s = dt / 60;
-
+        this.food -= 0.01 * s;
         this.control.add(Vector.fromAngle(Math.random() * Math.PI * 2).mult(0.1));
         this.control.normalize();
         this.parent.rotation = this.physics.velocity.toAngle();
@@ -76,6 +79,7 @@ export class FishBehaviour extends NetComponent {
         data.physics = this.physics.id;
         data.hitbox = this.hitbox.id;
         data.control = this.control.toLike();
+        data.food = this.food;
         return data;
     }
 
@@ -84,5 +88,6 @@ export class FishBehaviour extends NetComponent {
         this.physics = this.parent.getComponent(data.physics);
         this.hitbox = this.parent.getComponent(data.hitbox);
         this.control = Vector.fromLike(data.control);
+        this.food = data.food;
     }
 }

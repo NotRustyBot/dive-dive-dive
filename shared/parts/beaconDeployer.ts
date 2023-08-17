@@ -20,7 +20,9 @@ export class BeaconDeployerPart extends Part {
         this.part = SubmarinePart.get(partTypes.beaconDeployer);
     }
 
-    override onRemove(): void {}
+    override onRemove(): void {
+        this.submarine.commands.unsubscribe("deploy-beacon", this);
+    }
 
     override init(): void {
         super.init();

@@ -1,13 +1,12 @@
 import express from "express";
 import fs from "fs";
 import cors from "cors";
-import { Drawable, DynamicHitbox, FishBehaviour, Hitbox, Light, ObjectScope, Physics, PhysicsDrawable, Recharge, Sync, Transform } from "./registry";
+import { Drawable, DynamicHitbox, FishBehaviour, FishFood, Hitbox, Light, ObjectScope, Physics, PhysicsDrawable, Recharge, Sync, Transform } from "./registry";
 import fileUpload from "express-fileupload";
 import { clearAll, connector } from "./main";
 import { ServerInfo, serverMode } from "@shared/serverInfo";
 import { BaseObject } from "@shared/baseObject";
 import { Vector, Vectorlike } from "@shared/types";
-import { Detectable } from "./server/detectable";
 import { RangeDetectable } from "./server/rangeDetectable";
 import { Detector } from "./server/detector";
 import { drawableExtra } from "@shared/mock/drawable";
@@ -168,6 +167,7 @@ registerFactory("fish", (v) => {
     hitbox.sides = new Vector(22, 22);
     hitbox.peek = [submarineLayer, terrainLayer];
     behaviour.hitbox = hitbox;
+    behaviour.food = 10;
     glow.tint = 0x66ff99;
     drawable.url = "/assets/fish.png";
     drawable.physics = physics;
@@ -180,17 +180,23 @@ registerFactory("fish", (v) => {
 });
 
 registerFactory("grass", (v) => {
-    const image = ObjectScope.game.createObject();
-    const transform = image.addComponent(Transform);
-    const drawable = image.addComponent(Drawable);
-    const sync = image.addComponent(Sync);
-    const glow1 = image.addComponent(Light);
-    const glow2 = image.addComponent(Light);
-    const glow3 = image.addComponent(Light);
-    const detectable = image.addComponent(RangeDetectable);
+    const grass = ObjectScope.game.createObject();
+    const transform = grass.addComponent(Transform);
+    const drawable = grass.addComponent(Drawable);
+    const sync = grass.addComponent(Sync);
+    const glow1 = grass.addComponent(Light);
+    const glow2 = grass.addComponent(Light);
+    const glow3 = grass.addComponent(Light);
+    const fishFood = grass.addComponent(FishFood);
+    const detectable = grass.addComponent(RangeDetectable);
     drawable.url = "/assets/grass.png";
     drawable.extra = drawableExtra.background;
     transform.position.set(v.x, v.y);
+
+    fishFood.food = 50;
+    fishFood.max = 100;
+    fishFood.generation = 0.01;
+
     glow1.offset.y = -78;
     glow1.offset.x = 5;
     glow1.range = 50;
@@ -208,10 +214,10 @@ registerFactory("grass", (v) => {
     glow3.range = 50;
     glow3.intensity = 1;
     glow3.tint = 0x99ccff;
-    sync.authorize([transform, drawable]);
-    image.initialiseComponents();
-    ObjectScope.network.scopeObject(image);
-    return image;
+    sync.authorize([transform, drawable, fishFood]);
+    grass.initialiseComponents();
+    ObjectScope.network.scopeObject(grass);
+    return grass;
 });
 
 registerFactory("recharge", (v) => {

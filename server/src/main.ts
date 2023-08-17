@@ -47,13 +47,15 @@ console.log("ready");
 const game = ObjectScope.game;
 
 export enum physicsLayerEnum {
-    collision,
+    marker,
     detectable,
+    fishFood,
 }
 
 export const physicsLayers: Record<physicsLayerEnum, Layer> = {
-    [physicsLayerEnum.collision]: new Layer(),
+    [physicsLayerEnum.marker]: new Layer(),
     [physicsLayerEnum.detectable]: new Layer(),
+    [physicsLayerEnum.fishFood]: new Layer(),
 };
 
 function createInfoObject() {
@@ -95,6 +97,7 @@ export function createSubmarine(client: Client) {
         { part: SubmarinePart.get(partTypes.beaconDeployer), count: 1 },
         { part: SubmarinePart.get(partTypes.sonar), count: 1 },
         { part: SubmarinePart.get(partTypes.floodlight), count: 1 },
+        { part: SubmarinePart.get(partTypes.fishFeeder), count: 1 },
     ];
     assemblies.submarine = submarine;
     assemblies.rangeDetector = detector;

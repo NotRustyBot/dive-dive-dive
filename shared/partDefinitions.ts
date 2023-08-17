@@ -129,6 +129,15 @@ export function defineParts() {
         strain: 1,
         modification: new SubStats({ space: -1, weight: 0.2 }),
         actions: [{image: "/assets/beacon.png", name: "deploy-beacon"}],
+    });
 
+    SubmarinePart.create({
+        type: partTypes.fishFeeder,
+        name: "Fish bait deployer",
+        desc: "",
+        slot: partSlot.system,
+        strain: 1,
+        modification: new SubStats({ space: -1, weight: 0.2 }),
+        actions: [{image: "/assets/bait.png", name: "deploy-bait"}],
     });
 }
